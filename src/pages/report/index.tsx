@@ -79,7 +79,7 @@ function formatDate(iso: string) {
 /* ─────────────────────────── component ─────────────────────── */
 export default function ReportPage() {
   const navigate = useNavigate();
-  const { user } = useAuth() as { user: { token: string } | null };
+  const { user,token } = useAuth();
 
   const [selected, setSelected] = useState<Topic | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
@@ -120,13 +120,13 @@ export default function ReportPage() {
 
   /* ── GET /report/category/:type ── */
   const loadReports = async () => {
-    if (!user?.token || !selected) return;
+    if (!user || !selected) return;
     setLoading(true);
     setError("");
     try {
       const res = await fetch(
         `${BASE_URL}/report/category/${selected.apiType.toLowerCase()}`,
-        { headers: { Authorization: `Bearer ${user.token}`, "Content-Type": "application/json" } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
       if (!res.ok) throw new Error((await res.json()).message ?? `Erreur ${res.status}`);
       const data = await res.json();
@@ -146,7 +146,7 @@ export default function ReportPage() {
     try {
       const res = await fetch(`${BASE_URL}/report/`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${user!.token}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ typeReport: selected.apiType, message: message.trim() }),
       });
       if (!res.ok) throw new Error((await res.json()).message ?? `Erreur ${res.status}`);

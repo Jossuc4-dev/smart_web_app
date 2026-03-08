@@ -4,6 +4,7 @@ import rhReducer from './slices/rhSlices';
 import stockReducer from './slices/stockSlice';
 import financeReducer from './slices/financeSlice';
 import venteReducer from './slices/venteSlice';
+import adminReducer from './slices/adminSlice';
 
 
 export const store = configureStore({
@@ -12,6 +13,7 @@ export const store = configureStore({
     stock: stockReducer,
     finance: financeReducer,
     vente: venteReducer,
+    admin: adminReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

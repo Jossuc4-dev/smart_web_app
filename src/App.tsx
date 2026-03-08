@@ -22,6 +22,11 @@ import ProductDetailScreen from "./pages/stock/id";
 import UserDetailScreen from "./pages/rh/id";
 import AddUserScreen from "./pages/rh/add";
 import UpdateUserScreen from "./pages/rh/update";
+import SelectProductsScreen from "./pages/ventes/add";
+import AddCommandeForm from "./pages/ventes/add/[id]";
+import AbonnementsScreen from "./pages/subscriptions";
+import SubscribeScreen from "./pages/subscriptions/add/[id]";
+import HelpScreen from "./pages/help";
 
 function App() {
   return (
@@ -30,126 +35,178 @@ function App() {
         <AuthProvider>
           <Routes>
             {/* Route publique - sans layout */}
-            <Route 
-              path="/" 
+            <Route
+              path="/"
               element={
                 <PublicRoute>
                   <AuthScreen />
                 </PublicRoute>
-              } 
+              }
             />
 
             {/* Routes protégées avec Layout */}
             <Route element={<Layout />}>
-              <Route 
-                path="/dashboard" 
+              <Route
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
                     <DashboardScreen />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
-              <Route 
-                path="/stock" 
+
+              <Route
+                path="/stock"
                 element={
                   <ProtectedRoute>
                     <StockScreen />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
-              <Route 
-                path="/stock/:id" 
+
+              <Route
+                path="/stock/:id"
                 element={
                   <ProtectedRoute>
                     <ProductDetailScreen />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
-              <Route 
-                path="/stock/add" 
+
+              <Route
+                path="/stock/add"
                 element={
                   <ProtectedRoute requiredRole="ADMIN">
                     <AddProductScreen />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
-              <Route 
-                path="/stock/update/:id" 
+
+              <Route
+                path="/stock/update/:id"
                 element={
                   <ProtectedRoute requiredRole="ADMIN">
                     <UpdateProductScreen />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
-              <Route 
-                path="/finance" 
+
+              <Route
+                path="/finance"
                 element={
                   <ProtectedRoute>
                     <FinanceScreen />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
-              <Route 
-                path="/report" 
+
+              <Route
+                path="/report"
                 element={
                   <ProtectedRoute>
                     <ReportPage />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
-              <Route 
-                path="/vente" 
+
+              <Route
+                path="/vente"
                 element={
                   <ProtectedRoute>
                     <VenteScreen />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
-              <Route 
-                path="/rh" 
+
+              <Route
+                path='/ventes'
+                element={
+                  <ProtectedRoute>
+                    <VenteScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/ventes/add'
+                element={
+                  <ProtectedRoute>
+                    <SelectProductsScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path='/ventes/add/:id'
+                element={
+                  <ProtectedRoute>
+                    <AddCommandeForm />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/rh"
                 element={
                   <ProtectedRoute requiredRole="ADMIN">
                     <RHScreen />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
-              <Route 
-                path="/rh/:id" 
+
+              <Route
+                path="/rh/:id"
                 element={
                   <ProtectedRoute>
                     <UserDetailScreen />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
-              <Route 
-                path="/rh/add" 
+
+              <Route
+                path="/rh/add"
                 element={
                   <ProtectedRoute requiredRole="ADMIN">
                     <AddUserScreen />
                   </ProtectedRoute>
-                } 
+                }
               />
-              
-              <Route 
-                path="/rh/update/:id" 
+
+              <Route
+                path="/rh/update/:id"
                 element={
                   <ProtectedRoute requiredRole="ADMIN">
                     <UpdateUserScreen />
                   </ProtectedRoute>
-                } 
+                }
               />
-            </Route>
 
+              <Route
+                path="/subscriptions"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <AbonnementsScreen />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/subscriptions/add/:id"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <SubscribeScreen />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/aide/"
+                element={
+                  <ProtectedRoute>
+                    <HelpScreen />
+                  </ProtectedRoute>
+                }
+              />
+
+            </Route>
             {/* Redirection 404 */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

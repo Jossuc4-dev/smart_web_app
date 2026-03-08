@@ -32,7 +32,7 @@ export interface Entreprise {
     idCompte: number
 }
 
-export interface Produit{
+export interface Produit {
     id: number,
     numero: string,
     nom: string,
@@ -46,7 +46,7 @@ export interface Produit{
 // Copied from models.ts
 export type UserRole = 'ADMIN' | 'SUPERADMIN' | 'USER';
 
-export interface Utilisateur{
+export interface Utilisateur {
     id: number;
     nom: string;
     email: string;
@@ -54,7 +54,7 @@ export interface Utilisateur{
     idProfession: number;
 }
 
-export interface Produit{
+export interface Produit {
     id: number,
     numero: string,
     nom: string,
@@ -67,7 +67,7 @@ export interface Produit{
 
 export type TransactionType = 'ENTREE' | 'SORTIE';
 
-export interface Transaction{
+export interface Transaction {
     id?: number;
     produitId: number;
     type: TransactionType | string;
@@ -77,17 +77,17 @@ export interface Transaction{
     ref: string;
 }
 
-export interface Commande{
-    id:number
-    idProduit:number
-    idClient :number
-    quantite :number
-    valide : Boolean
-    date :Date
-    datePaiement:Date
+export interface Commande {
+    id: number
+    idProduit: number
+    idClient: number
+    quantite: number
+    valide: Boolean
+    date: Date
+    datePaiement: Date
 }
 
-export interface facture{
+export interface facture {
     id: number,
     numero: string,
     idCommande: number,
@@ -96,7 +96,7 @@ export interface facture{
     retard: boolean
 }
 
-export interface entreprise{
+export interface entreprise {
     id: number,
     nom: string,
     email: string,
@@ -104,13 +104,13 @@ export interface entreprise{
     activite: string
 }
 
-export interface minimizedProfessionModel{
+export interface minimizedProfessionModel {
     poste: string,
     entreprise?: entreprise
-    idEntreprise?: number
+    idEntreprise: number
 }
 
-export interface client{
+export interface client {
     id: number,
     nom: string,
     email: string,
@@ -118,21 +118,21 @@ export interface client{
     idEntreprise: number
 }
 
-export interface conges{
-    id   :number
-    idUser :number
+export interface conges {
+    id: number
+    idUser: number
     dateDebut: Date
     dateFin: Date
 }
 
-export interface Profession{
+export interface Profession {
     id: number,
     poste: string,
     salaire: number,
     idEntreprise: number
 }
 
-export interface activite{
+export interface activite {
     id: number,
     idUser: number,
     action: string,
@@ -140,33 +140,44 @@ export interface activite{
     superAdmin: boolean
 }
 
-export interface Abonnement{
+export interface Abonnement {
     id?: number;
     idEntreprise?: number;
     reference: string;
     idOffre?: number;
     date: Date;
     endDate: Date;
-    offre:Offre;
+    offre: Offre;
 }
 
-export interface Offre{
-    id?:number,
-    services:string,
-    montant:string,
-    duree: "MENSUELLE"|"ANNUELLE"
+export interface Offre {
+    id?: number,
+    services: string,
+    montant: string,
+    duree: "MENSUELLE" | "ANNUELLE"
 }
 
-export interface Compte{
-    id:number,
-    montant:number,
-    idEntreprise:number,
+export interface Compte {
+    id: number,
+    montant: number,
+    idEntreprise: number,
     updatedIn: Date
 }
 
-export interface Notif{
-    id:number;
-    idEntreprise:number;
+export interface compteFinance {
+    depenses:{
+        marchandises: number
+        total: number
+        transport: number
+    }
+    solde: number
+    soldeInitial: number
+    ventes: number
+}
+
+export interface Notif {
+    id: number;
+    idEntreprise: number;
     type: "AJOUT_PRODUIT" | "APPROVISIONNEMENT" | "COMMANDE";
     titre: string;
     message: string;
@@ -174,10 +185,10 @@ export interface Notif{
     createdAt: Date
 }
 
-export interface Fournisseur{
-    nom:string;
-    email:string;
-    telephone:string;
-    nif:string;
-    stat:string;
+export interface Fournisseur {
+    nom: string;
+    email: string;
+    telephone: string;
+    nif: string;
+    stat: string;
 }

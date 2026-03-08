@@ -1,8 +1,8 @@
-// src/pages/dashboard/index.tsx
+// src/pages/dashboard/index.tsx (version modifiée)
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-// ─── react-icons ─────────────────────────────────────────────────────────────
+// Icônes...
 import {
   LuActivity,
   LuPackage,
@@ -13,21 +13,14 @@ import {
   LuTrendingUp,
 } from "react-icons/lu";
 
-// ─── recharts ────────────────────────────────────────────────────────────────
+// Recharts...
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import BASE_URL from "../../config/ApiConfig";
 import "./index.css";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from '../../contexts/AuthContext';
+import { useApi } from '../../hooks/useApi';
 
-
-function setHeader(token: string) {
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-}
-
+// Fonctions utilitaires (inchangées)
 function isToday(dateStr: string | Date) {
   const d = new Date(dateStr);
   const n = new Date();
@@ -44,7 +37,7 @@ function fmtAr(n: number) {
   return String(n);
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// Types...
 interface DashboardData {
   revenusHebdo:   number;
   ventesJour:     number;
@@ -65,7 +58,7 @@ interface CaData {
   jours:     CaJour[];
 }
 
-// ─── Custom Recharts Tooltip ──────────────────────────────────────────────────
+// Custom Tooltip (inchangé)
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload || !payload.length) return null;
   return (
@@ -91,7 +84,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-// ─── CaLineChart ──────────────────────────────────────────────────────────────
+// CaLineChart (inchangé)
 function CaLineChart({ jours }: { jours: CaJour[] }) {
   const chartData = jours.map((d) => ({
     jour: d.jour,
@@ -163,7 +156,7 @@ function CaLineChart({ jours }: { jours: CaJour[] }) {
   );
 }
 
-// ─── KpiCard ──────────────────────────────────────────────────────────────────
+// KpiCard (inchangé)
 interface KpiCardProps {
   title:          string;
   value:          string | number;
@@ -186,7 +179,6 @@ function KpiCard({ title, value, icon: Icon, accent, variation, variationType, o
       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = `${accent}44`; }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"; }}
     >
-      {/* ambient glow */}
       <div
         className="kpi-card__glow"
         style={{ background: `${accent}18` }}
@@ -218,14 +210,16 @@ function KpiCard({ title, value, icon: Icon, accent, variation, variationType, o
   );
 }
 
-// ─── Dashboard ────────────────────────────────────────────────────────────────
+// Dashboard principal avec useApi
 export default function Dashboard() {
-  const {user, token} = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const { get } = useApi();
 
-  const [loading,     setLoading]     = useState(true);
-  const [refreshing,  setRefreshing]  = useState(false);
-  const [error,       setError]       = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   const [data, setData] = useState<DashboardData>({
     revenusHebdo: 0, ventesJour: 0, totalProduits: 0,
@@ -236,62 +230,83 @@ export default function Dashboard() {
     mois: "", totalMois: 0, jours: [],
   });
 
-  // ── Fetch 6 APIs ─────────────────────────────────────────────────────────────
   const fetchDashboard = useCallback(async () => {
     setError(null);
+    setSessionExpired(false);
+    
     try {
-      const h = setHeader(token!);
-      const [alertRes, prodRes, cmdRes, bilanRes, sortiesRes, caRes] = await Promise.all([
-        fetch(`${BASE_URL}/stock/produit/alerts/`,      { headers: h }), // 1. Alertes stock
-        fetch(`${BASE_URL}/stock/produit`,              { headers: h }), // 2. Produits
-        fetch(`${BASE_URL}/vente/commande`,             { headers: h }), // 3. Commandes
-        fetch(`${BASE_URL}/finance/bilan/hebdo`,        { headers: h }), // 4. Bilan hebdo
-        fetch(`${BASE_URL}/stock/mouvement`,            { headers: h }), // 5. Mouvements → ventes/jour
-        fetch(`${BASE_URL}/finance/ca-journalier-mois`, { headers: h }), // 6. CA du mois
+      // Utilisation du hook useApi qui gère automatiquement le 401
+      const [alertes, produits, commandes, bilan, mouvements, caJournalier] = await Promise.all([
+        get<any[]>('stock/produit/alerts/'),      // 1. Alertes stock
+        get<any[]>('stock/produit'),              // 2. Produits
+        get<any[]>('vente/commande'),             // 3. Commandes
+        get<any>('finance/bilan/hebdo'),          // 4. Bilan hebdo
+        get<any[]>('stock/mouvement'),            // 5. Mouvements
+        get<any>('finance/ca-journalier-mois'),   // 6. CA du mois
       ]);
 
-      const alertes      = (await alertRes.json()).length;
-      const produits     = (await prodRes.json()).length;
-      const commandes    = (await cmdRes.json()).length;
-      const bilan        = await bilanRes.json();
-      const mouvements   = await sortiesRes.json();
-      const caJournalier = await caRes.json();
-
-      const ventes     = mouvements.filter((v: any) => v.type?.toString() === "SORTIE" && isToday(v.date));
-      const sommeVente = ventes.reduce((s: number, v: any) => s + v.prixUnitaire * v.quantite, 0);
+      const ventes = mouvements.filter((v: any) => 
+        v.type?.toString() === "SORTIE" && isToday(v.date)
+      );
+      const sommeVente = ventes.reduce((s: number, v: any) => 
+        s + (v.prixUnitaire || 0) * (v.quantite || 0), 0
+      );
 
       setData({
-        revenusHebdo:   bilan?.current?.ventes || 0,
-        ventesJour:     sommeVente,
-        totalProduits:  produits,
-        alertesStock:   alertes,
-        totalCommandes: commandes,
-        variation:      bilan?.variation?.ca || "",
+        revenusHebdo: bilan?.current?.ventes || 0,
+        ventesJour: sommeVente,
+        totalProduits: produits.length,
+        alertesStock: alertes.length,
+        totalCommandes: commandes.length,
+        variation: bilan?.variation?.ca || "",
       });
+
       setCaData(caJournalier);
-    } catch {
-      setError("Serveur inaccessible — données de démo affichées.");
-      // ── Mock data ─────────────────────────────────────────────────────────
-      setData({
-        revenusHebdo: 14_800_000, ventesJour: 3_250_000,
-        totalProduits: 148, alertesStock: 7,
-        totalCommandes: 64, variation: "+12.4%",
-      });
-      setCaData({
-        mois: "Février 2026",
-        totalMois: 87_500_000,
-        jours: Array.from({ length: 28 }, (_, i) => ({
-          jour: `${i + 1}`,
-          ca:   Math.round(Math.random() * 4_000_000 + 1_500_000),
-        })),
-      });
+    } catch (err) {
+      console.error('Erreur lors du chargement du dashboard:', err);
+      
+      // Vérifier si c'est une erreur de session
+      if (err instanceof Error && err.message.includes('Session expirée')) {
+        setSessionExpired(true);
+      } else {
+        setError("Impossible de charger les données. Utilisation des données de démonstration.");
+        // Mock data comme fallback
+        setData({
+          revenusHebdo: 14_800_000,
+          ventesJour: 3_250_000,
+          totalProduits: 148,
+          alertesStock: 7,
+          totalCommandes: 64,
+          variation: "+12.4%",
+        });
+        setCaData({
+          mois: "Février 2026",
+          totalMois: 87_500_000,
+          jours: Array.from({ length: 28 }, (_, i) => ({
+            jour: `${i + 1}`,
+            ca: Math.round(Math.random() * 4_000_000 + 1_500_000),
+          })),
+        });
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [token]);
+  }, [get]);
 
-  useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
+
+  // Redirection si session expirée
+  useEffect(() => {
+    if (sessionExpired) {
+      const timer = setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [sessionExpired, navigate]);
 
   const vt =
     data.variation?.startsWith("+") ? "positive" :
@@ -303,19 +318,19 @@ export default function Dashboard() {
       value: `${data.ventesJour.toLocaleString("fr-FR")} Ar`,
       icon: LuReceiptText, accent: "#4ade80",
       variation: data.variation || undefined, variationType: vt,
-      onClick: ()=> navigate("/vente"),
+      onClick: () => navigate("/vente"),
     },
     {
       title: "Commandes",
       value: data.totalCommandes.toLocaleString("fr-FR"),
       icon: LuShoppingCart, accent: "#60a5fa",
-      onClick: ()=> navigate("/vente"),
+      onClick: () => navigate("/vente"),
     },
     {
       title: "Produits en stock",
       value: data.totalProduits.toLocaleString("fr-FR"),
       icon: LuPackage, accent: "#a78bfa",
-      onClick: ()=> navigate("/stock"),
+      onClick: () => navigate("/stock"),
     },
     {
       title: "Alertes stock",
@@ -324,25 +339,52 @@ export default function Dashboard() {
       accent: data.alertesStock > 0 ? "#f87171" : "#6b7280",
       variation: data.alertesStock > 0 ? `${data.alertesStock} produit(s)` : "Tout est OK",
       variationType: data.alertesStock > 0 ? "negative" : "neutral",
-      onClick: ()=> navigate("/stock"),
+      onClick: () => navigate("/stock"),
     },
   ];
 
   const stockItems = [
-    { label: "Produits actifs",    value: data.totalProduits,  color: "#4ade80", pct: 85 },
-    { label: "Alertes critiques",  value: data.alertesStock,   color: "#f87171", pct: data.totalProduits > 0 ? Math.round((data.alertesStock / data.totalProduits) * 100) : 0 },
+    { label: "Produits actifs", value: data.totalProduits, color: "#4ade80", pct: 85 },
+    { 
+      label: "Alertes critiques", 
+      value: data.alertesStock, 
+      color: "#f87171", 
+      pct: data.totalProduits > 0 ? Math.round((data.alertesStock / data.totalProduits) * 100) : 0 
+    },
     { label: "Commandes en cours", value: data.totalCommandes, color: "#60a5fa", pct: 70 },
   ];
 
-  if (loading) return (
-    <div className="dash-loading">
-      <div className="dash-loading__spinner" />
-      <p className="dash-loading__text">Chargement du tableau de bord…</p>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="dash-loading">
+        <div className="dash-loading__spinner" />
+        <p className="dash-loading__text">Chargement du tableau de bord…</p>
+      </div>
+    );
+  }
+
+  if (sessionExpired) {
+    return (
+      <div className="dash-session-expired">
+        <div className="session-expired-card">
+          <LuTriangleAlert size={48} color="#f87171" />
+          <h2>Session expirée</h2>
+          <p>Votre session a expiré. Vous allez être redirigé vers la page de connexion.</p>
+          <div className="redirect-spinner" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-content">
+      {error && (
+        <div className="dashboard-warning">
+          <LuTriangleAlert size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* KPI Grid */}
       <div className="kpi-grid">
         {kpis.map((card) => (
@@ -399,7 +441,10 @@ export default function Dashboard() {
             <span className="hebdo-card__amount-unit">Ar</span>
           </div>
           <div className="hebdo-card__bar-track">
-            <div className="hebdo-card__bar-fill" />
+            <div 
+              className="hebdo-card__bar-fill" 
+              style={{ width: '65%' }}
+            />
           </div>
           <div className="hebdo-card__caption">65% de l'objectif mensuel</div>
         </div>

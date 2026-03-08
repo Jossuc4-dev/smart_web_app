@@ -17,6 +17,7 @@ import {
   LuSettings
 } from "react-icons/lu";
 import "./sidebar.css";
+import Logo from '../assets/images/logo-smart.png'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface SidebarProps {
@@ -132,17 +133,17 @@ export default function Sidebar({
   };
 
   const handleSubscription = () => {
-    navigate('/subscription');
+    navigate('/subscriptions');
     setIsProfileMenuOpen(false);
   };
 
   const handleHelp = () => {
-    navigate('/help');
+    navigate('/aide');
     setIsProfileMenuOpen(false);
   };
 
-  const handleSettings = () => {
-    navigate('/settings');
+  const handleProfile = () => {
+    navigate('/profile');
     setIsProfileMenuOpen(false);
   };
 
@@ -157,7 +158,7 @@ export default function Sidebar({
         {/* ── Logo ─────────────────────────────────────────────────────────── */}
         <div className="sidebar__logo">
           <div className="sidebar__logo-icon">
-            <span>📊</span>
+            <img src={Logo} alt="Logo" className="sidebar__logo-image" width={30} height={30} />
           </div>
           <span className="sidebar__logo-text">My Business</span>
         </div>
@@ -192,14 +193,14 @@ export default function Sidebar({
           {isProfileMenuOpen && (
             <div className="profile-menu">
               <ProfileMenuItem 
+                icon={LuUser} 
+                label="Profil" 
+                onClick={handleProfile}
+              />
+              <ProfileMenuItem 
                 icon={LuCreditCard} 
                 label="Abonnement" 
                 onClick={handleSubscription}
-              />
-              <ProfileMenuItem 
-                icon={LuSettings} 
-                label="Paramètres" 
-                onClick={handleSettings}
               />
               <ProfileMenuItem 
                 icon={LuCircleHelp} 

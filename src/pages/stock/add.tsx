@@ -14,7 +14,7 @@ import type { BonCommandeData } from '../../models/interfaces';
 export default function AddProductScreen() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { user,token } = useAuth();
 
   // Utilisation des selecteurs
   const addSuccess = useAppSelector(selectAddSuccess);
@@ -60,9 +60,9 @@ export default function AddProductScreen() {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
-    
+
     if (!isFormValid()) {
       setAlertMessage('Veuillez remplir tous les champs obligatoires');
       setShowAlert(true);
@@ -75,26 +75,24 @@ export default function AddProductScreen() {
       return;
     }
 
-    const data: BonCommandeData = {
-      produit: {
-        numero: form.numero,
-        nom: form.nom,
-        type: form.type,
-        prixAchat: Number(form.prix),
-        prixVente: Number(form.vente),
-        quantite: Number(form.quantite),
-        idEntreprise: 1, // À remplacer par l'ID réel de l'entreprise
-      },
-      fournisseur: {
-        nom: form.nom_fournisseur,
-        telephone: form.telephone_fournisseur,
-        nif: form.nif,
-        stat: form.stat,
-        email: form.email_fournisseur,
-      },
-      paiement: paymentMode,
+    const data = {
+      numero: form.numero,
+      nom: form.nom,
+      type: form.type,
+      prix: Number(form.prix),
+      vente: Number(form.vente),
+      quantite: Number(form.quantite),
+      idEntreprise: user?.id!,
+      nom_fournisseur: form.nom_fournisseur,
+      telephone_fournisseur: form.telephone_fournisseur,
+      nif: form.nif,
+      stat: form.stat,
+      email_fournisseur: form.email_fournisseur,
+      method: paymentMode,
       transport: Number(form.transport),
     };
+
+    console.log({data})
 
     dispatch(addProduct({ data, token }));
   };
@@ -106,7 +104,7 @@ export default function AddProductScreen() {
       generatePdf(); // Generate PDF on success
       dispatch(fetchProducts(token || '')); // Refresh products
       dispatch(resetAddSuccess()); // Reset success flag
-      
+
       setTimeout(() => {
         setShowAlert(false);
         navigate('/stock');

@@ -41,7 +41,7 @@ export const fetchProducts = createAsyncThunk<Produit[], string>(
   }
 );
 
-export const addProduct = createAsyncThunk<Produit, { data: BonCommandeData; token: string }>(
+export const addProduct = createAsyncThunk<Produit, { data: any; token: string }>(
   'stock/addProduct',
   async ({ data, token }, { rejectWithValue }) => {
     try {
