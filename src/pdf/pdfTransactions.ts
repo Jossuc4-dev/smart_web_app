@@ -2,10 +2,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { Transaction } from '../models/index';
-
-function formatAr(value: number): string {
-  return `${value.toLocaleString('fr-MG')} Ar`;
-}
+import { formatAr } from '../utils/formatCurrency';
 
 function formatDate(d: Date | string): string {
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });

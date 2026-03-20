@@ -2,10 +2,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { BilanComptable } from '../models/interfaces';
-
-function formatAr(value: number): string {
-  return `${value.toLocaleString('fr-MG')} Ar`;
-}
+import { formatAr } from '../utils/formatCurrency';
 
 function drawHeader(doc: jsPDF, annee: string) {
   // Deep teal gradient simulation via layered rects

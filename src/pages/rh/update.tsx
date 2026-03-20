@@ -22,6 +22,7 @@ import {
   FaChild
 } from 'react-icons/fa';
 import './update.css';
+import BASE_URL from '../../config/ApiConfig';
 
 interface Profession {
   id: number;
@@ -76,8 +77,6 @@ export default function UpdateUserScreen() {
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [originalData, setOriginalData] = useState<UserData | null>(null);
-
-  const BASE_URL = 'http://localhost:3000'; // À remplacer par votre config
 
   // Chargement des données
   useEffect(() => {
@@ -176,8 +175,10 @@ export default function UpdateUserScreen() {
       idProfession: selectedProfession?.id,
     };
 
+    console.log('Données à soumettre:', formData);
+
     try {
-      const response = await fetch(`${BASE_URL}/rh/update-employee/${id}`, {
+      const response = await fetch(`${BASE_URL}/rh/staff/id/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

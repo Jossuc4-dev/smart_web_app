@@ -4,12 +4,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../redux/store';
 import { fetchProducts } from '../../../redux/slices/stockSlice';
 import { useAuth } from '../../../contexts/AuthContext';
-import { 
-  FaArrowLeft, 
-  FaShoppingCart, 
-  FaUser, 
-  FaPhone, 
-  FaEnvelope, 
+import {
+  FaArrowLeft,
+  FaShoppingCart,
+  FaUser,
+  FaPhone,
+  FaEnvelope,
   FaMapMarkerAlt,
   FaPlus,
   FaTimes,
@@ -22,6 +22,8 @@ import {
 } from 'react-icons/fa';
 import './form.css';
 import BASE_URL from '../../../config/ApiConfig';
+import { generateInvoicePdf, generateMultiplePdf } from '../../../pdf/pdfFacture';
+import type { CommandeResponse } from '../../../models/interfaces';
 
 interface Client {
   id: number;
@@ -57,14 +59,14 @@ export default function AddCommandeForm() {
   const dispatch = useAppDispatch();
   const { token, logout } = useAuth();
 
-  const produit = useAppSelector(state => 
+  const produit = useAppSelector(state =>
     state.stock.products.find(p => p.id === Number(id))
   );
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
-  
+
   // État pour le client (soit existant, soit nouveau)
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
@@ -75,14 +77,14 @@ export default function AddCommandeForm() {
     adresse: ''
   });
   const [newClientErrors, setNewClientErrors] = useState<Record<string, string>>({});
-  
+
   // État pour la commande
   const [quantite, setQuantite] = useState<number>(1);
   const [datePaiement, setDatePaiement] = useState<string>(
     new Date().toISOString().split('T')[0] // Date du jour au format YYYY-MM-DD
   );
   const [typePaiement, setTypePaiement] = useState<'CASH' | 'CARTE' | 'MOBILE_MONEY' | 'CREDIT'>('CASH');
-  
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Gestion de la session expirée
@@ -192,14 +194,45 @@ export default function AddCommandeForm() {
         return;
       }
 
+
       if (response.ok) {
-        const result = await response.json();
-        navigate('/ventes', { 
-          state: { 
-            success: true, 
+        const data: { success: boolean, data: CommandeResponse } = await response.json();
+        const commandeResponse = data.data;
+        console.log('Réponse du serveur:', commandeResponse);
+        const blobPDf = generateInvoicePdf(commandeResponse, () => {
+          alert("Generation de pdf échouée. Veuillez réessayer.");
+        });
+
+        console.log(blobPDf)
+
+        if (blobPDf) {
+          const formData = new FormData();
+          formData.append(
+            'facture',                                              // nom du champ fichier
+            blobPDf,
+            `facture-${commandeResponse.reference || commandeResponse.id}.pdf`
+          );
+          formData.append('email', commandeResponse.client.email); // mail du client
+
+          // 3. Envoyer au backend
+          const sendFacture = await fetch(`${BASE_URL}/vente/facture/send`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              // ⚠️ PAS de Content-Type ici : fetch le génère automatiquement avec le boundary
+            },
+            body: formData,
+          });
+
+          console.log('Réponse envoi facture:', sendFacture);
+        }
+
+        navigate('/ventes', {
+          state: {
+            success: true,
             message: 'Vente créée avec succès',
-            vente: result 
-          } 
+            vente: commandeResponse,
+          }
         });
       } else {
         const error = await response.json();
@@ -278,7 +311,7 @@ export default function AddCommandeForm() {
           <div className="section-header">
             <h3>Client</h3>
             {!showNewClientForm && !selectedClient && (
-              <button 
+              <button
                 type="button"
                 className="add-client-btn"
                 onClick={() => setShowNewClientForm(true)}
@@ -311,7 +344,7 @@ export default function AddCommandeForm() {
             <div className="new-client-form">
               <div className="form-header">
                 <h4>Informations client</h4>
-                <button 
+                <button
                   className="close-btn"
                   onClick={() => {
                     setShowNewClientForm(false);
@@ -378,7 +411,7 @@ export default function AddCommandeForm() {
         <div className="form-section">
           <h3>Quantité</h3>
           <div className="quantity-control">
-            <button 
+            <button
               type="button"
               className="quantity-btn"
               onClick={() => setQuantite(Math.max(1, quantite - 1))}
@@ -394,7 +427,7 @@ export default function AddCommandeForm() {
               onChange={(e) => setQuantite(Math.min(produit.quantite, parseInt(e.target.value) || 1))}
               className={`quantity-input ${errors.quantite ? 'error' : ''}`}
             />
-            <button 
+            <button
               type="button"
               className="quantity-btn"
               onClick={() => setQuantite(Math.min(produit.quantite, quantite + 1))}
@@ -513,13 +546,13 @@ export default function AddCommandeForm() {
         )}
 
         <div className="form-actions">
-          <button 
+          <button
             className="cancel-btn"
             onClick={() => navigate('/ventes/add')}
           >
             Annuler
           </button>
-          <button 
+          <button
             className="submit-btn"
             onClick={handleSubmit}
             disabled={submitting || (!selectedClient && !showNewClientForm)}

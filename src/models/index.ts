@@ -192,3 +192,8 @@ export interface Fournisseur {
     nif: string;
     stat: string;
 }
+
+export interface TransactionCompte {
+  montant: number,
+  motif: string
+}

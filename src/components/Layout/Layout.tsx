@@ -4,10 +4,11 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../Sidebar';
 import { useAuth } from '../../contexts/AuthContext';
 import './Layout.css';
+import { StockAlertToast } from '../notifications/stockAlertToast';
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
   const location = useLocation();
 
   // Ne pas afficher le layout sur la page de login
@@ -37,24 +38,18 @@ const Layout = () => {
       />
 
       <main className="main-area">
-        <header className="top-bar">
-          <button className="menu-button" onClick={toggleSidebar}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </button>
-          <div className="page-title">
-            {getPageTitle(location.pathname)}
-          </div>
-          <div className="top-bar-actions">
-            {/* Vous pouvez ajouter des actions globales ici */}
-          </div>
-        </header>
-
         <div className="content-area">
           <Outlet />
         </div>
       </main>
+      {/*
+        ✅ StockAlertToast — une seule instance, toujours montée.
+        Invisible tant qu'aucune alerte n'arrive via Socket.IO.
+        Seuls les ADMIN reçoivent les alertes stock (filtrage côté backend).
+      */}
+      {user?.role === 'ADMIN' && (
+        <StockAlertToast token={token} />
+      )}
     </div>
   );
 };

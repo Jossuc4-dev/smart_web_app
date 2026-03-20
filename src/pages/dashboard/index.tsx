@@ -233,7 +233,6 @@ export default function Dashboard() {
   const fetchDashboard = useCallback(async () => {
     setError(null);
     setSessionExpired(false);
-    
     try {
       // Utilisation du hook useApi qui gère automatiquement le 401
       const [alertes, produits, commandes, bilan, mouvements, caJournalier] = await Promise.all([
@@ -299,12 +298,11 @@ export default function Dashboard() {
   }, [fetchDashboard]);
 
   // Redirection si session expirée
+  const {logout} = useAuth()
   useEffect(() => {
+
     if (sessionExpired) {
-      const timer = setTimeout(() => {
-        navigate('/', { replace: true });
-      }, 3000);
-      return () => clearTimeout(timer);
+      logout()
     }
   }, [sessionExpired, navigate]);
 

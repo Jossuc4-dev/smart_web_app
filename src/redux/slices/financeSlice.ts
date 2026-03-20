@@ -1,8 +1,9 @@
 // src/redux/slices/financeSlice.ts
-import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import BASE_URL from '../../config/ApiConfig'; // Adjust if needed
-import type { Transaction, Compte } from '../../models/index';
+import type { Transaction,Compte } from '../../models/index';
 import type { BilanComptable, CompteResultat, FinanceState } from '../../models/interfaces';
+import { useAuth } from '../../contexts/AuthContext';
 
 
 const initialState: FinanceState = {
@@ -30,6 +31,11 @@ export const fetchCompteResultat = createAsyncThunk<CompteResultat, string>(
           'Content-Type': 'application/json',
         },
       });
+      if(response.status === 401){
+        localStorage.removeItem('token');
+        localStorage.removeItem('user'); 
+        window.location.href = '/';
+      }
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -109,16 +115,12 @@ export const fetchAllTransactions = createAsyncThunk<Transaction[], string>(
 const financeSlice = createSlice({
   name: 'finance',
   initialState,
-  reducers: {
-    // Add any sync reducers if needed
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       // fetchCompteResultat
-      .addCase(fetchCompteResultat.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchCompteResultat.fulfilled, (state, action: PayloadAction<CompteResultat>) => {
+      .addCase(fetchCompteResultat.pending, (state) => { state.loading = true; })
+      .addCase(fetchCompteResultat.fulfilled, (state, action) => {
         state.loading = false;
         state.compteResultat = action.payload;
       })
@@ -127,10 +129,8 @@ const financeSlice = createSlice({
         state.error = action.payload as string;
       })
       // fetchBilanComptable
-      .addCase(fetchBilanComptable.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchBilanComptable.fulfilled, (state, action: PayloadAction<BilanComptable>) => {
+      .addCase(fetchBilanComptable.pending, (state) => { state.loading = true; })
+      .addCase(fetchBilanComptable.fulfilled, (state, action) => {
         state.loading = false;
         state.bilanComptable = action.payload;
       })
@@ -138,23 +138,19 @@ const financeSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // fetchGeneral
-      .addCase(fetchGeneral.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchGeneral.fulfilled, (state, action: PayloadAction<Compte>) => {
+      // fetchGeneral (optionnel – à garder seulement si utilisé)
+      .addCase(fetchGeneral.pending, (state) => { state.loading = true; })
+      .addCase(fetchGeneral.fulfilled, (state, action) => {
         state.loading = false;
-        state.account = action.payload;
+        state.general = action.payload; // ou state.account si vous gardez
       })
       .addCase(fetchGeneral.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
       // fetchAllTransactions
-      .addCase(fetchAllTransactions.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchAllTransactions.fulfilled, (state, action: PayloadAction<Transaction[]>) => {
+      .addCase(fetchAllTransactions.pending, (state) => { state.loading = true; })
+      .addCase(fetchAllTransactions.fulfilled, (state, action) => {
         state.loading = false;
         state.transactions = action.payload;
       })

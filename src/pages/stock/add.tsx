@@ -14,13 +14,16 @@ import type { BonCommandeData } from '../../models/interfaces';
 export default function AddProductScreen() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { user,token } = useAuth();
+  const { user, token } = useAuth();
 
   // Utilisation des selecteurs
   const addSuccess = useAppSelector(selectAddSuccess);
   const addStatus = useAppSelector(selectAddStatus);
   const isAdding = useAppSelector(selectIsAdding);
   const addError = useAppSelector(selectStockError);
+
+  const [fpMode, setFpMode] = useState(true)
+  const [salesMode, setSalesMode] = useState(false)
 
   const [form, setForm] = useState({
     numero: '',
@@ -90,9 +93,10 @@ export default function AddProductScreen() {
       email_fournisseur: form.email_fournisseur,
       method: paymentMode,
       transport: Number(form.transport),
+      finalite: fpMode ? "MATIERE_PREMIERE" : "VENTE"
     };
 
-    console.log({data})
+    console.log({ data })
 
     dispatch(addProduct({ data, token }));
   };
@@ -140,6 +144,7 @@ export default function AddProductScreen() {
         ['STAT', form.stat],
         ['Email', form.email_fournisseur],
         ['Paiement', paymentMode],
+        ['Matiere première']
       ],
       startY: 30,
       theme: 'grid',
@@ -233,6 +238,37 @@ export default function AddProductScreen() {
             onChange={e => handleChange('transport', e.target.value)}
             placeholder="Coût transport"
           />
+        </div>
+
+        <div className="switch-group">
+          <label className="switch-label">
+            <span>Matière première</span>
+            <div className="switch">
+              <input
+                type="radio"
+                checked={salesMode}
+                onChange={(e) => {
+                  setSalesMode(e.target.checked)
+                  setFpMode(!e.target.checked)
+                }}
+              />
+              <span className="switch-slider"></span>
+            </div>
+          </label>
+          <label className="switch-label">
+            <span>Produit à vendre</span>
+            <div className="switch">
+              <input
+                type="radio"
+                checked={fpMode}
+                onChange={(e) =>{
+                  setSalesMode(!e.target.checked)
+                  setFpMode(e.target.checked)
+                }}
+              />
+              <span className="switch-slider"></span>
+            </div>
+          </label>
         </div>
 
         <h2>Fournisseur</h2>

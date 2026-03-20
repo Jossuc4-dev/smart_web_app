@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 .ignore
+
+.dockerignore
+compose.yaml
+Dockerfile
+test.txt

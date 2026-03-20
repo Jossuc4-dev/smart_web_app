@@ -155,7 +155,7 @@ export default function AuthScreen() {
         </div>
 
         {/* Forgot */}
-        <div className="forgot-password">
+        <div className="forgot-password" onClick={()=> navigate("/forgot-password")}>
           <a href="/forgot-password" className="forgot-link">
             Mot de passe oublié ?
           </a>

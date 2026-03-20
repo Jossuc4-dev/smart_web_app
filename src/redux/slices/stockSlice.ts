@@ -41,6 +41,27 @@ export const fetchProducts = createAsyncThunk<Produit[], string>(
   }
 );
 
+export const fetchForSalesProducts = createAsyncThunk<Produit[], string>(
+  'stock/fetchForSalesProducts',
+  async (token, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${BASE_URL}/stock/produit/sales`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (err) {
+      return rejectWithValue((err as Error).message);
+    }
+  }
+);
+
 export const addProduct = createAsyncThunk<Produit, { data: any; token: string }>(
   'stock/addProduct',
   async ({ data, token }, { rejectWithValue }) => {

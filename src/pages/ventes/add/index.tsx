@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../redux/store';
-import { fetchProducts } from '../../../redux/slices/stockSlice';
+import { fetchForSalesProducts, fetchProducts } from '../../../redux/slices/stockSlice';
 import { useAuth } from '../../../contexts/AuthContext';
 import { FaSearch, FaTimes, FaFilter, FaArrowLeft, FaPlus } from 'react-icons/fa';
 import ProductCard from '../../../components/Card/ProductCard';
@@ -23,7 +23,7 @@ export default function SelectProductsScreen() {
 
   useEffect(() => {
     if (token) {
-      dispatch(fetchProducts(token));
+      dispatch(fetchForSalesProducts(token));
     }
   }, [token, dispatch]);
 

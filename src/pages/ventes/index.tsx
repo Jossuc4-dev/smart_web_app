@@ -86,16 +86,16 @@ export default function VentesScreen() {
   const [errorMessage, setErrorMessage] = useState('');
 
   // Gestion de la session expirée
-  useEffect(() => {
-    if (sessionExpired) {
-      setShowSessionExpiredModal(true);
-      const timer = setTimeout(() => {
-        logout();
-        navigate('/', { replace: true });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [sessionExpired, logout, navigate]);
+  // useEffect(() => {
+  //   if (sessionExpired) {
+  //     setShowSessionExpiredModal(true);
+  //     const timer = setTimeout(() => {
+  //       logout();
+  //       navigate('/', { replace: true });
+  //     }, 3000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [sessionExpired, logout, navigate]);
 
   const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
 

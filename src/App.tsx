@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import './App.css';
 import { Provider } from "react-redux";
 import { store } from "./redux/store";
-import { AuthProvider } from "./contexts/AuthContext";
+import {AuthProvider} from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/route/ProtectedRoute";
 import { PublicRoute } from "./components/route/PublicRoute";
 import Layout from "./components/Layout/Layout";
@@ -27,6 +27,10 @@ import AddCommandeForm from "./pages/ventes/add/[id]";
 import AbonnementsScreen from "./pages/subscriptions";
 import SubscribeScreen from "./pages/subscriptions/add/[id]";
 import HelpScreen from "./pages/help";
+import DepositScreen from "./pages/finance/wallet";
+import Wallet from "./pages/finance/wallet";
+import ForgotPassword from "./pages/auth/forgotPassword";
+import ResetPassword from "./pages/auth/resetPassword";
 
 function App() {
   return (
@@ -40,6 +44,22 @@ function App() {
               element={
                 <PublicRoute>
                   <AuthScreen />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <PublicRoute>
+                  <ForgotPassword />
+                </PublicRoute>
+              }
+            />
+             <Route
+              path="/reset-password"
+              element={
+                <PublicRoute>
+                  <ResetPassword />
                 </PublicRoute>
               }
             />
@@ -96,6 +116,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <FinanceScreen />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/finance/wallet"
+                element={
+                  <ProtectedRoute>
+                    <Wallet />
                   </ProtectedRoute>
                 }
               />
