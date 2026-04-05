@@ -37,7 +37,9 @@ export const fetchProducts = createAsyncThunk<Produit[], string>(
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return await response.json();
+      const data = await response.json()
+      console.log({produits:data})
+      return data;
     } catch (err) {
       return rejectWithValue((err as Error).message);
     }
@@ -60,7 +62,7 @@ export const fetchForSalesProducts = createAsyncThunk<Produit[], string>(
       }
       const data = await response.json();
       // Filtrer uniquement les produits avec stock > 0 pour la vente
-      return data.filter((product: Produit) => product.quantite > 0);
+      return data;
     } catch (err) {
       return rejectWithValue((err as Error).message);
     }

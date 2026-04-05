@@ -31,7 +31,19 @@ export interface Entreprise {
     ref: string,
     idCompte: number
 }
-
+export interface Entrepot{
+    ville:string;
+    zone:string;
+    id:number;
+}
+export interface Stock {
+    id:number;
+    reference: string;
+    quantite: number;
+    transport:number;
+    dateDepot:Date;
+    entrepot: Entrepot;
+}
 export interface Produit {
     id: number,
     numero: string,
@@ -39,8 +51,20 @@ export interface Produit {
     prixAchat: number,
     prixVente: number,
     type: string,
-    quantite: number,
-    idEntreprise: number
+    Stock: Stock[]
+}
+
+export interface ProduitById{
+    id: number,
+    numero: string,
+    nom: string,
+    prixAchat: number,
+    prixVente: number,
+    quantite: number
+    type: string,
+    transactions: Transaction[],
+    commandes: Commande[]
+    Stock: Stock[]
 }
 
 // Copied from models.ts
@@ -165,7 +189,7 @@ export interface Compte {
 }
 
 export interface compteFinance {
-    depenses:{
+    depenses: {
         marchandises: number
         total: number
         transport: number
@@ -194,66 +218,94 @@ export interface Fournisseur {
 }
 
 export interface TransactionCompte {
-  montant: number,
-  motif: string
+    montant: number,
+    motif: string
 }
 
 // src/types/formation.types.ts
 export interface Formation {
-  id: number;
-  titre: string;
-  description: string | null;
-  miniature: string | null;
-  dureeMinutes: number;
-  estPublique: boolean;
-  idEntreprise: number | null;
-  createdAt: string;
-  updatedAt: string;
-  lecons?: Lecon[];
-  suivi?: SuiviFormation;
+    id: number;
+    titre: string;
+    description: string | null;
+    miniature: string | null;
+    dureeMinutes: number;
+    estPublique: boolean;
+    idEntreprise: number | null;
+    createdAt: string;
+    updatedAt: string;
+    lecons?: Lecon[];
+    suivi?: SuiviFormation;
 }
 
 export interface Lecon {
-  id: number;
-  idFormation: number;
-  titre: string;
-  ordre: number;
-  format: 'TEXTE' | 'VIDEO' | 'IMAGE';
-  contenuTexte: string | null;
-  urlVideo: string | null;
-  urlImage: string | null;
-  paragraphes?: Paragraphe[];
+    id: number;
+    idFormation: number;
+    titre: string;
+    ordre: number;
+    format: 'TEXTE' | 'VIDEO' | 'IMAGE';
+    contenuTexte: string | null;
+    urlVideo: string | null;
+    urlImage: string | null;
+    paragraphes?: Paragraphe[];
 }
 
 export interface Paragraphe {
-  id: number;
-  titre: string;
-  texte: string;
-  fichierMedia: string;
-  idLecon: number;
+    id: number;
+    titre: string;
+    texte: string;
+    fichierMedia: string;
+    idLecon: number;
 }
 
 export interface SuiviFormation {
-  id: number;
-  idUtilisateur: number;
-  idFormation: number;
-  statut: 'NON_COMMENCE' | 'EN_COURS' | 'TERMINE' | 'CERTIFIE';
-  progressionPourcent: number;
-  tempsPasseSecondes: number;
-  derniereLecon: number;
-  dateDebut: string | null;
-  dateCompletion: string | null;
-  certificatDelivre: boolean;
-  lienCertificat: string | null;
+    id: number;
+    idUtilisateur: number;
+    idFormation: number;
+    statut: 'NON_COMMENCE' | 'EN_COURS' | 'TERMINE' | 'CERTIFIE';
+    progressionPourcent: number;
+    tempsPasseSecondes: number;
+    derniereLecon: number;
+    dateDebut: string | null;
+    dateCompletion: string | null;
+    certificatDelivre: boolean;
+    lienCertificat: string | null;
 }
 
 export interface CreateSuiviDTO {
-  idFormation: number;
+    idFormation: number;
 }
 
 export interface UpdateSuiviDTO {
-  progressionPourcent?: number;
-  tempsPasseSecondes?: number;
-  derniereLecon?: number;
-  statut?: 'NON_COMMENCE' | 'EN_COURS' | 'TERMINE' | 'CERTIFIE';
+    progressionPourcent?: number;
+    tempsPasseSecondes?: number;
+    derniereLecon?: number;
+    statut?: 'NON_COMMENCE' | 'EN_COURS' | 'TERMINE' | 'CERTIFIE';
+}
+
+// src/models/index.ts - Ajoutez ou mettez à jour ces interfaces
+
+export interface EntrepotProduit {
+    id: number;
+    reference: string;
+    quantite: number;
+    transport: number;
+    dateDepot: string;
+    produit: {
+        id: number;
+        nom: string;
+        numero: string;
+        prixVente: number;
+        type: string;
+        prixAchat: number;
+        quantite: number;
+    };
+}
+
+export interface Entrepot {
+    id: number;
+    ville: string;
+    zone: string;
+    idEntreprise: number;
+    Stock?: EntrepotProduit[];
+    produits?: EntrepotProduit[];
 }

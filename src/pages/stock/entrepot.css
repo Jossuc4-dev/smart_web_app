@@ -1,0 +1,610 @@
+/* src/pages/stock/entrepots.css */
+
+.entrepots-container {
+  min-height: 100vh;
+  background: #f4f7fa;
+}
+
+.entrepots-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(46, 134, 171, 0.12);
+  padding: 1rem 2rem;
+}
+
+.entrepots-header .header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(46, 134, 171, 0.12);
+  background: white;
+  color: #2E86AB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  border-color: #2E86AB;
+  transform: translateX(-2px);
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(46, 134, 171, 0.1);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2E86AB;
+  font-size: 1.5rem;
+}
+
+.header-title h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a2940;
+  margin: 0;
+}
+
+.header-title p {
+  font-size: 0.75rem;
+  color: #7a95aa;
+  margin: 4px 0 0 0;
+}
+
+.entrepots-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Grille des entrepôts */
+.entrepots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.entrepot-card {
+  background: white;
+  border: 1px solid rgba(46, 134, 171, 0.12);
+  border-radius: 20px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.entrepot-card:hover {
+  transform: translateY(-4px);
+  border-color: #2E86AB;
+  box-shadow: 0 12px 32px rgba(46, 134, 171, 0.1);
+}
+
+.entrepot-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.entrepot-icon {
+  font-size: 2rem;
+  color: #2E86AB;
+}
+
+.entrepot-card-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a2940;
+  margin: 0;
+}
+
+.entrepot-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #7a95aa;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.entrepot-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(46, 134, 171, 0.08);
+  color: #2E86AB;
+  font-size: 0.8rem;
+}
+
+.arrow-icon {
+  transition: transform 0.2s;
+}
+
+.entrepot-card:hover .arrow-icon {
+  transform: translateX(4px);
+}
+
+/* Détails de l'entrepôt */
+.entrepot-details {
+  background: white;
+  border-radius: 24px;
+  border: 1px solid rgba(46, 134, 171, 0.12);
+  margin-top: 2rem;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background: rgba(46, 134, 171, 0.04);
+  border-bottom: 1px solid rgba(46, 134, 171, 0.08);
+}
+
+.details-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.details-title svg {
+  font-size: 1.5rem;
+  color: #2E86AB;
+}
+
+.details-title h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a2940;
+  margin: 0;
+}
+
+.close-details {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(46, 134, 171, 0.12);
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.close-details:hover {
+  border-color: #E05A5A;
+  color: #E05A5A;
+}
+
+/* Statistiques détaillées */
+.details-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  background: #f8fafc;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid rgba(46, 134, 171, 0.08);
+}
+
+.stat-item svg {
+  font-size: 1.5rem;
+  color: #2E86AB;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a2940;
+  display: block;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: #7a95aa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Résumé des statuts */
+.status-summary {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-badge.status-danger {
+  background: rgba(224, 90, 90, 0.1);
+  color: #E05A5A;
+}
+
+.status-badge.status-warning {
+  background: rgba(217, 119, 6, 0.1);
+  color: #D97706;
+}
+
+.status-badge.status-success {
+  background: rgba(27, 138, 90, 0.1);
+  color: #1B8A5A;
+}
+
+/* Tableau des produits */
+.products-list {
+  padding: 0 2rem 2rem 2rem;
+}
+
+.products-list h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a2940;
+  margin-bottom: 1rem;
+}
+
+.products-table {
+  overflow-x: auto;
+}
+
+.products-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.products-table th,
+.products-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(46, 134, 171, 0.08);
+}
+
+.products-table th {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #7a95aa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #f8fafc;
+}
+
+.products-table td {
+  font-size: 0.85rem;
+  color: #3d5a73;
+}
+
+.quantity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.quantity-badge.status-danger {
+  background: rgba(224, 90, 90, 0.15);
+  color: #E05A5A;
+}
+
+.quantity-badge.status-warning {
+  background: rgba(217, 119, 6, 0.15);
+  color: #D97706;
+}
+
+.quantity-badge.status-success {
+  background: rgba(27, 138, 90, 0.15);
+  color: #1B8A5A;
+}
+
+tr.status-danger td:first-child,
+tr.status-danger td:first-child strong {
+  color: #E05A5A;
+}
+
+tr.status-warning td:first-child,
+tr.status-warning td:first-child strong {
+  color: #D97706;
+}
+
+tr.status-success td:first-child,
+tr.status-success td:first-child strong {
+  color: #1B8A5A;
+}
+
+/* Loading et Error */
+.entrepots-loading,
+.entrepots-error {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f4f7fa;
+}
+
+.entrepots-loading .spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(46, 134, 171, 0.1);
+  border-top-color: #2E86AB;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.entrepots-error svg {
+  font-size: 3rem;
+  color: #E05A5A;
+  margin-bottom: 1rem;
+}
+
+.entrepots-error button {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  background: #2E86AB;
+  border: none;
+  border-radius: 30px;
+  color: white;
+  cursor: pointer;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .entrepots-header {
+    padding: 1rem;
+  }
+  
+  .entrepots-content {
+    padding: 1rem;
+  }
+  
+  .entrepots-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .details-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .products-table {
+    font-size: 0.75rem;
+  }
+  
+  .products-table th,
+  .products-table td {
+    padding: 0.5rem;
+  }
+}
+
+/* src/pages/stock/entrepots.css - Ajoutez ces styles */
+
+.entrepot-stats-preview {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(46, 134, 171, 0.08);
+}
+
+.preview-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #7a95aa;
+}
+
+.preview-item svg {
+  font-size: 0.875rem;
+  color: #2E86AB;
+}
+
+.empty-products {
+  text-align: center;
+  padding: 3rem;
+  background: #f8fafc;
+  border-radius: 16px;
+  color: #7a95aa;
+}
+
+.empty-products svg {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-products p {
+  font-size: 0.875rem;
+}
+
+/* Amélioration du responsive */
+@media (max-width: 768px) {
+  .entrepot-stats-preview {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .preview-item {
+    justify-content: space-between;
+  }
+}
+/* Ajoutez ces styles à la fin du fichier entrepot.css */
+
+/* Bouton d'ajout dans l'en-tête */
+.add-entrepot-btn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  background: #2E86AB;
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-entrepot-btn:hover {
+  background: #236b8a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(46, 134, 171, 0.3);
+}
+
+/* Message de succès */
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: rgba(27, 138, 90, 0.1);
+  border: 1px solid rgba(27, 138, 90, 0.2);
+  border-radius: 12px;
+  color: #1B8A5A;
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+  animation: slideIn 0.3s ease;
+}
+
+.success-message svg {
+  font-size: 1.1rem;
+}
+
+/* État vide des entrepôts */
+.empty-entrepots {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 24px;
+  border: 1px solid rgba(46, 134, 171, 0.12);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: #7a95aa;
+  opacity: 0.5;
+  margin-bottom: 1rem;
+}
+
+.empty-entrepots h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a2940;
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-entrepots p {
+  font-size: 0.85rem;
+  color: #7a95aa;
+  margin: 0 0 1.5rem 0;
+}
+
+.create-first-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #2E86AB;
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.create-first-btn:hover {
+  background: #236b8a;
+  transform: translateY(-2px);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive pour le bouton d'ajout */
+@media (max-width: 768px) {
+  .header-content {
+    flex-wrap: wrap;
+  }
+  
+  .add-entrepot-btn {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .empty-entrepots {
+    padding: 2rem 1rem;
+  }
+  
+  .empty-icon {
+    font-size: 3rem;
+  }
+}

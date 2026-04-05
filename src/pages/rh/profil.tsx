@@ -15,7 +15,6 @@ import { MdWork, MdSchedule } from 'react-icons/md';
 interface Profession {
   id: number;
   poste: string;
-  salaire: number;
 }
 
 interface Activity {
@@ -38,6 +37,7 @@ interface UserProfile {
   boolcnaps?: boolean;
   numeroCnaps?: string;
   actif: boolean;
+  salaire:number;
   profession: Profession;
   activities: Activity[];
 }
@@ -275,7 +275,7 @@ export default function ProfileStaff() {
                 <div style={{ width: 1, background: '#d0ede7' }} />
                 <div>
                   <p style={s.statLabel}>Salaire de base</p>
-                  <p style={s.statValue}>{user.profession.salaire.toLocaleString()} Ar</p>
+                  <p style={s.statValue}>{user.salaire.toLocaleString()} Ar</p>
                 </div>
               </div>
             </div>

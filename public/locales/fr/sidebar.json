@@ -1,0 +1,16 @@
+{
+  "dashboard": "Tableau de bord",
+  "ventes": "Ventes",
+  "stock": "Stock",
+  "reports": "Alertes & Reports",
+  "finance": "Finance",
+  "rh": "Ressources Humaines",
+  "formations": "Formations",
+
+  "profil": "Mon Profil",
+  "abonnement": "Abonnement",
+  "aide": "Aide & Support",
+  "deconnexion": "Déconnexion",
+
+  "navigation": "Navigation"
+}

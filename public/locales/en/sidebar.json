@@ -1,0 +1,16 @@
+{
+  "dashboard": "Dashboard",
+  "ventes": "Sales",
+  "stock": "Inventory",
+  "reports": "Alerts & Reports",
+  "finance": "Finance",
+  "rh": "Human Resources",
+  "formations": "Trainings",
+
+  "profil": "My Profile",
+  "abonnement": "Subscription",
+  "aide": "Help & Support",
+  "deconnexion": "Logout",
+
+  "navigation": "Navigation"
+}

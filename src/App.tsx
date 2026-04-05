@@ -27,7 +27,6 @@ import AddCommandeForm from "./pages/ventes/add/[id]";
 import AbonnementsScreen from "./pages/subscriptions";
 import SubscribeScreen from "./pages/subscriptions/add/[id]";
 import HelpScreen from "./pages/help";
-import DepositScreen from "./pages/finance/wallet";
 import Wallet from "./pages/finance/wallet";
 import ForgotPassword from "./pages/auth/forgotPassword";
 import ResetPassword from "./pages/auth/resetPassword";
@@ -35,6 +34,9 @@ import FormationPage from "./pages/formation";
 import DetailedFormationPage from "./pages/formation/id";
 import ReapprovisionnerScreen from "./pages/stock/approvisionnement";
 import ProfileStaff from "./pages/rh/profil";
+import ProfessionScreen from "./pages/rh/profession";
+import EntrepotsScreen from "./pages/stock/entrepot";
+import EntrepotAdd from "./pages/stock/entrepot/ajout";
 
 function App() {
   return (
@@ -102,6 +104,24 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="ADMIN">
                     <AddProductScreen />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/stock/entrepots"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <EntrepotsScreen />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/stock/entrepots/add"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <EntrepotAdd />
                   </ProtectedRoute>
                 }
               />
@@ -226,6 +246,15 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="ADMIN">
                     <UpdateUserScreen />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/rh/profession/"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <ProfessionScreen />
                   </ProtectedRoute>
                 }
               />

@@ -1,5 +1,5 @@
 // src/pages/stock/StockScreen.tsx
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../redux/store';
 import { fetchProducts } from '../../redux/slices/stockSlice';
@@ -29,11 +29,13 @@ import {
   FaEllipsisV,
   FaBarcode,
   FaDownload,
-  FaUpload
+  FaUpload,
+  FaWarehouse
 } from 'react-icons/fa';
 
 import './index.css';
-import Sidebar from '../../components/Sidebar';
+import type { Stock } from '../../models';
+import BASE_URL from '../../config/ApiConfig';
 
 type FilterType = 'all' | 'low' | 'out' | 'in-stock';
 
@@ -42,7 +44,7 @@ const PRODUCTS_PER_PAGE = 12;
 export default function StockScreen() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { token } = useAuth();
 
   const products = useAppSelector(selectAllProducts) || [];
   const loading = useAppSelector(selectStockLoading);
@@ -57,13 +59,29 @@ export default function StockScreen() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
-  const [showSidebar, setShowSidebar] = useState(false);
+  const [entrepotCount, setEntrepotCount] = useState(0);
 
   useEffect(() => {
     if (token) {
       dispatch(fetchProducts(token));
+      fetchEntrepotStats();
     }
   }, [token, dispatch]);
+
+  const fetchEntrepotStats = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/stock/entrepot`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Entrepôts:', data);
+        setEntrepotCount(data.length);
+      }
+    } catch (error) {
+      console.error('Erreur chargement entrepôts:', error);
+    }
+  };
 
   const handleRefresh = () => {
     if (token) {
@@ -99,7 +117,6 @@ export default function StockScreen() {
   const filteredProducts = useMemo(() => {
     let list = [...products];
 
-    // Filtres
     if (activeFilter === 'low') list = list.filter(p => p.quantite > 0 && p.quantite < 10);
     if (activeFilter === 'out') list = list.filter(p => p.quantite === 0);
     if (activeFilter === 'in-stock') list = list.filter(p => p.quantite >= 10);
@@ -115,7 +132,6 @@ export default function StockScreen() {
       );
     }
 
-    // Tri
     if (sortBy !== 'none') {
       list.sort((a, b) => {
         let comparison = 0;
@@ -139,14 +155,18 @@ export default function StockScreen() {
 
   const hasMore = visibleCount < filteredProducts.length;
 
-  const getStockStatus = (quantite: number) => {
+  const getStockStatus = (stock: Stock[]) => {
+    let quantite = 0
+    stock.map(s=>quantite+=s.quantite)
     if (quantite === 0) return { label: 'Rupture', className: 'status-badge danger', icon: FaExclamationTriangle };
     if (quantite < 10) return { label: 'Stock bas', className: 'status-badge warning', icon: FaHourglassHalf };
     return { label: 'En stock', className: 'status-badge success', icon: FaCheckCircle };
   };
 
-  const getStockProgress = (quantite: number) => {
+  const getStockProgress = (stock: Stock[]) => {
     const max = 50;
+    let quantite = 0
+    stock.map(s=>quantite+=s.quantite)
     return Math.min((quantite / max) * 100, 100);
   };
 
@@ -180,8 +200,6 @@ export default function StockScreen() {
 
   return (
     <div className="stock-container">
-      {/* <Sidebar onClose={()=> setShowSidebar(false)} isOpen={showSidebar} alertesStock={0} /> */}
-      {/* Header avec effet de verre */}
       <header className="stock-header">
         <div className="header-content">
           <div className="header-left">
@@ -281,6 +299,25 @@ export default function StockScreen() {
             </div>
             <div className="stat-icon-wrapper danger">
               <FaExclamationTriangle />
+            </div>
+          </div>
+
+          {/* Nouvelle carte Entrepôts */}
+          <div 
+            className="stat-card" 
+            style={{ cursor: 'pointer' }}
+            onClick={() => navigate('/stock/entrepots')}
+          >
+            <div className="stat-info">
+              <span className="stat-label">Entrepôts</span>
+              <span className="stat-value">{entrepotCount}</span>
+              <span className="stat-footer">
+                <FaWarehouse className="stat-icon-small" />
+                Sites de stockage
+              </span>
+            </div>
+            <div className="stat-icon-wrapper primary">
+              <FaWarehouse />
             </div>
           </div>
         </div>
@@ -460,9 +497,9 @@ export default function StockScreen() {
           <>
             <div className={viewMode === 'grid' ? 'products-grid' : 'products-list'}>
               {displayedProducts.map(product => {
-                const status = getStockStatus(product.quantite);
+                const status = getStockStatus(product.Stock);
                 const StatusIcon = status.icon;
-                const progress = getStockProgress(product.quantite);
+                const progress = getStockProgress(product.Stock);
                 const isSelected = selectedProducts.includes(product.id);
 
                 return viewMode === 'grid' ? (
@@ -471,7 +508,6 @@ export default function StockScreen() {
                     className={`product-card ${isSelected ? 'selected' : ''}`}
                     onClick={() => navigate(`/stock/${product.id}`)}
                   >
-                    {/* Checkbox + menu */}
                     <div className="product-card-header">
                       <div className="product-checkbox" onClick={(e) => e.stopPropagation()}>
                         <input
@@ -485,12 +521,10 @@ export default function StockScreen() {
                       </button>
                     </div>
 
-                    {/* Avatar */}
                     <div className="product-avatar">
                       <FaBoxOpen />
                     </div>
 
-                    {/* Nom + ref */}
                     <div className="product-info">
                       <h3 className="product-name">{product.nom}</h3>
                       <p className="product-ref">
@@ -499,13 +533,11 @@ export default function StockScreen() {
                       </p>
                     </div>
 
-                    {/* Catégorie */}
                     <div className="product-category">
                       <FaTag className="category-icon" />
                       {product.type}
                     </div>
 
-                    {/* Prix */}
                     <div className="product-prices">
                       <div className="price-item">
                         <span className="price-label">Achat</span>
@@ -517,7 +549,6 @@ export default function StockScreen() {
                       </div>
                     </div>
 
-                    {/* Stock + barre */}
                     <div className="product-stock">
                       <div className="stock-header">
                         <span className="stock-label">Stock</span>
@@ -537,7 +568,6 @@ export default function StockScreen() {
                       </div>
                     </div>
 
-                    {/* Badge + flèche */}
                     <div className="product-footer">
                       <span className={status.className}>
                         <StatusIcon />
@@ -632,7 +662,6 @@ export default function StockScreen() {
         )}
       </div>
 
-      {/* FAB Add */}
       <button
         className="fab-button"
         onClick={() => navigate('/stock/add')}

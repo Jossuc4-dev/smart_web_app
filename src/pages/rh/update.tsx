@@ -48,10 +48,12 @@ interface UserData {
   enfants: number;
 }
 
+
+
 export default function UpdateUserScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
 
   // États des champs
   const [nom, setNom] = useState('');
@@ -188,6 +190,7 @@ export default function UpdateUserScreen() {
       });
 
       const result = await response.json();
+      console.log(result)
 
       if (result.success) {
         setShowSuccessModal(true);

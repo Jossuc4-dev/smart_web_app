@@ -15,11 +15,13 @@ import {
   LuChevronUp,
   LuChevronDown,
   LuSettings,
-  LuBook
+  LuBook,
+  LuGlobe,           // ← Nouvelle icône pour la langue
 } from "react-icons/lu";
 import "./sidebar.css";
 import Logo from '../assets/images/logo-smart.png';
 import { useAuth } from "../contexts/AuthContext";
+import { useTranslation } from 'react-i18next';   // ← Ajout important
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface SidebarProps {
@@ -45,17 +47,44 @@ interface ProfileMenuItemProps {
   color?: string;
 }
 
-// ─── NavItem ──────────────────────────────────────────────────────────────────
+// ─── Language Switcher ───────────────────────────────────────────────────────
+function LanguageSwitcher() {
+  const { i18n } = useTranslation('sidebar');
+
+  const languages = [
+    { code: 'fr', label: '🇫🇷', name: 'Fr' },
+    { code: 'en', label: '🇬🇧', name: 'En' }
+  ];
+
+  return (
+    <div className="language-switcher">
+      {languages.map(({ code, label }) => (
+        <button
+          key={code}
+          className={`lang-btn ${i18n.language === code ? 'active' : ''}`}
+          onClick={() => {
+            i18n.changeLanguage(code)
+          }}
+          title={`Passer en ${code.toUpperCase()}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── NavItem (inchangé) ───────────────────────────────────────────────────────
 function NavItem({ icon: Icon, label, badge, path }: NavItemProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  const isActive = location.pathname === path || 
-                   (path !== '/dashboard' && location.pathname.startsWith(path));
+
+  const isActive = location.pathname === path ||
+    (path !== '/dashboard' && location.pathname.startsWith(path));
 
   return (
-    <div 
-      className={`nav-item${isActive ? " nav-item--active" : ""}`} 
+    <div
+      className={`nav-item${isActive ? " nav-item--active" : ""}`}
       onClick={() => navigate(path)}
     >
       <span className="nav-item__icon">
@@ -69,7 +98,7 @@ function NavItem({ icon: Icon, label, badge, path }: NavItemProps) {
   );
 }
 
-// ─── ProfileMenuItem ──────────────────────────────────────────────────────────
+// ─── ProfileMenuItem (inchangé) ───────────────────────────────────────────────
 function ProfileMenuItem({ icon: Icon, label, onClick, color }: ProfileMenuItemProps) {
   return (
     <div className="profile-menu-item" onClick={onClick}>
@@ -79,7 +108,7 @@ function ProfileMenuItem({ icon: Icon, label, onClick, color }: ProfileMenuItemP
   );
 }
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
+// ─── Sidebar Principal ────────────────────────────────────────────────────────
 export default function Sidebar({
   alertesStock,
   isOpen,
@@ -92,6 +121,7 @@ export default function Sidebar({
   const profileRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation('sidebar');
 
   // Obtenir le prénom et les initiales
   const firstName = userName?.split(' ')[0] || "Admin";
@@ -102,7 +132,7 @@ export default function Sidebar({
     .slice(0, 2)
     .toUpperCase() || "AD";
 
-  // Fermer le menu si on clique ailleurs
+  // Fermer le menu profil
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
@@ -111,25 +141,23 @@ export default function Sidebar({
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const navItems: NavItemProps[] = [
-    { label: "Dashboard", icon: LuLayoutDashboard, path: "/dashboard" },
-    { label: "Ventes", icon: LuReceiptText, path: "/vente" },
-    { label: "Stock", icon: LuPackage, path: "/stock" },
-    { label: "Reports", icon: LuTriangleAlert, badge: alertesStock, path: "/report" },
-    { label: "Finance", icon: LuWallet, path: "/finance" },
-    { label: "RH", icon: LuUser, path: "/rh" },
-    { label: "Formations", icon: LuBook, path: "/formation" }
+  const navItems = [
+    { label: t('dashboard'), icon: LuLayoutDashboard, path: "/dashboard" },
+    { label: t('ventes'), icon: LuReceiptText, path: "/vente" },
+    { label: t('stock'), icon: LuPackage, path: "/stock" },
+    { label: t('reports'), icon: LuTriangleAlert, badge: alertesStock, path: "/report" },
+    { label: t('finance'), icon: LuWallet, path: "/finance" },
+    { label: t('rh'), icon: LuUser, path: "/rh" },
+    { label: t('formations'), icon: LuBook, path: "/formation" }
   ];
 
+  // ... (handleLogout, handleSubscription, handleHelp, handleProfile restent identiques)
+
   const handleLogout = () => {
-    if (onLogout) {
-      onLogout();
-    }
+    if (onLogout) onLogout();
     setIsProfileMenuOpen(false);
   };
 
@@ -150,37 +178,38 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Mobile overlay — clique pour fermer */}
-      {isOpen && (
-        <div className="sidebar-overlay" onClick={onClose} />
-      )}
+      {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
 
       <aside className={`sidebar${isOpen ? " sidebar--open" : ""}`}>
-        {/* ── Logo ─────────────────────────────────────────────────────────── */}
-        <div className="sidebar__logo">
-          <div className="sidebar__logo-icon">
-            <img src={Logo} alt="Logo" className="sidebar__logo-image" width={30} height={30} />
+        {/* ── Header avec Logo + Sélecteur de langue ─────────────────────────── */}
+        <div className="sidebar__header">
+          <div className="sidebar__logo">
+            <div className="sidebar__logo-icon">
+              <img src={Logo} alt="Logo" className="sidebar__logo-image" width={30} height={30} />
+            </div>
+            <span className="sidebar__logo-text">My Business</span>
           </div>
-          <span className="sidebar__logo-text">My Business</span>
+
+          {/* ← Sélecteur de langue ajouté ici */}
+          <LanguageSwitcher />
         </div>
 
         {/* ── Navigation ───────────────────────────────────────────────────── */}
         <span className="sidebar__section-label">Navigation</span>
         <nav className="sidebar__nav">
           {navItems.map((item) => (
-            <NavItem key={item.label} {...item} />
+            <NavItem key={item.path} {...item} />
           ))}
         </nav>
 
-        {/* ── User footer avec menu contextuel ─────────────────────────────── */}
+        {/* Footer utilisateur (inchangé) */}
         <div className="sidebar__footer" ref={profileRef}>
-          <div 
-            className="sidebar__user" 
+          {/* ... reste du code du footer identique ... */}
+          <div
+            className="sidebar__user"
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
           >
-            <div className="sidebar__avatar">
-              {initials}
-            </div>
+            <div className="sidebar__avatar">{initials}</div>
             <div className="sidebar__user-info">
               <div className="sidebar__user-name">{firstName}</div>
               <div className="sidebar__user-role">{userRole}</div>
@@ -190,28 +219,15 @@ export default function Sidebar({
             </div>
           </div>
 
-          {/* Menu contextuel du profil */}
           {isProfileMenuOpen && (
             <div className="profile-menu">
-              <ProfileMenuItem 
-                icon={LuUser} 
-                label="Profil" 
-                onClick={handleProfile}
-              />
-              <ProfileMenuItem 
-                icon={LuCreditCard} 
-                label="Abonnement" 
-                onClick={handleSubscription}
-              />
-              <ProfileMenuItem 
-                icon={LuCircleHelp} 
-                label="Aide & Support" 
-                onClick={handleHelp}
-              />
+              <ProfileMenuItem icon={LuUser} label={t('profil')} onClick={handleProfile} />
+              <ProfileMenuItem icon={LuCreditCard} label={t('abonnement')} onClick={handleSubscription} />
+              <ProfileMenuItem icon={LuCircleHelp} label={t('aide')} onClick={handleHelp} />
               <div className="profile-menu-divider" />
-              <ProfileMenuItem 
-                icon={LuLogOut} 
-                label="Déconnexion" 
+              <ProfileMenuItem
+                icon={LuLogOut}
+                label={t('deconnexion')}
                 onClick={handleLogout}
                 color="#f87171"
               />

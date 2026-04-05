@@ -7,7 +7,7 @@
   margin: 0 auto;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #2d3748;
-  background: #f0f5fb; /* Nouveau fond */
+  background: #f0f5fb;
 }
 
 /* Header & Tabs */
@@ -44,7 +44,7 @@
 }
 
 .fi-tabs button.active {
-  background: #2E86AB; /* Bleu primaire */
+  background: #2E86AB;
   color: white;
   box-shadow: 0 4px 6px rgba(46, 134, 171, 0.2);
 }
@@ -84,13 +84,8 @@
   color: #2d3748;
 }
 
-.positive {
-  color: #1B8A5A; /* Vert teal pour positif */
-}
-
-.negative {
-  color: #E05A5A; /* Rouge pour négatif */
-}
+.positive { color: #1B8A5A; }
+.negative { color: #E05A5A; }
 
 /* Sections */
 .fi-section {
@@ -112,15 +107,15 @@
 }
 
 .fi-year-badge {
-  background: #e3f0f5; /* Fond bleu très clair */
-  color: #2E86AB; /* Bleu primaire */
+  background: #e3f0f5;
+  color: #2E86AB;
   font-size: 0.9rem;
   padding: 4px 12px;
   border-radius: 999px;
   margin-left: 12px;
 }
 
-/* Sub-tabs (Actif / Passif) */
+/* Sub-tabs */
 .fi-sub-tabs {
   display: flex;
   gap: 12px;
@@ -137,12 +132,12 @@
 }
 
 .fi-sub-tabs button.active {
-  background: #2E86AB; /* Bleu primaire */
+  background: #2E86AB;
   color: white;
   border-color: #2E86AB;
 }
 
-/* Rows (Bilan & Résultat) */
+/* Rows */
 .fi-row {
   display: flex;
   justify-content: space-between;
@@ -151,23 +146,10 @@
   font-size: 1.05rem;
 }
 
-.fi-row-label {
-  color: #4a5568;
-  font-weight: 500;
-}
-
-.fi-row-value {
-  font-weight: 600;
-  color: #2d3748;
-}
-
-.fi-row-value.neg {
-  color: #E05A5A; /* Rouge pour négatif */
-}
-
-.fi-row-value.pos {
-  color: #1B8A5A; /* Vert teal pour positif */
-}
+.fi-row-label { color: #4a5568; font-weight: 500; }
+.fi-row-value { font-weight: 600; color: #2d3748; }
+.fi-row-value.neg { color: #E05A5A; }
+.fi-row-value.pos { color: #1B8A5A; }
 
 .fi-separator {
   height: 2px;
@@ -183,13 +165,8 @@
   font-weight: 700;
 }
 
-.fi-row-final-label {
-  color: #2d3748;
-}
-
-.fi-row-final-value {
-  color: #2E86AB; /* Bleu primaire */
-}
+.fi-row-final-label { color: #2d3748; }
+.fi-row-final-value { color: #2E86AB; }
 
 /* Transactions list */
 .fi-tx-item {
@@ -211,25 +188,11 @@
   background: #f7fafc;
 }
 
-.fi-tx-icon.entree {
-  background: #fff3e0;
-  color: #E05A5A; /* Rouge pour sortie */
-}
+.fi-tx-icon.entree { background: #fff3e0; color: #E05A5A; }
+.fi-tx-icon.sortie { background: #e8f5e9; color: #1B8A5A; }
 
-.fi-tx-icon.sortie {
-  background: #e8f5e9;
-  color: #1B8A5A; /* Vert teal pour entrée */
-}
-
-.fi-tx-ref {
-  font-weight: 600;
-  color: #2d3748;
-}
-
-.fi-tx-date {
-  font-size: 0.9rem;
-  color: #718096;
-}
+.fi-tx-ref { font-weight: 600; color: #2d3748; }
+.fi-tx-date { font-size: 0.9rem; color: #718096; }
 
 .fi-tx-amount {
   font-weight: 700;
@@ -238,13 +201,8 @@
   text-align: right;
 }
 
-.fi-tx-amount.pos {
-  color: #1B8A5A; /* Vert teal pour positif */
-}
-
-.fi-tx-amount.neg {
-  color: #E05A5A; /* Rouge pour négatif */
-}
+.fi-tx-amount.pos { color: #1B8A5A; }
+.fi-tx-amount.neg { color: #E05A5A; }
 
 /* Pagination */
 .fi-pagination {
@@ -266,19 +224,10 @@
   transition: all 0.2s;
 }
 
-.fi-page-btn:hover:not(:disabled) {
-  background: #edf2f7;
-}
+.fi-page-btn:hover:not(:disabled) { background: #edf2f7; }
+.fi-page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.fi-page-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.fi-page-text {
-  color: #4a5568;
-  font-weight: 500;
-}
+.fi-page-text { color: #4a5568; font-weight: 500; }
 
 /* Empty state */
 .fi-empty {
@@ -305,7 +254,7 @@
   width: 48px;
   height: 48px;
   border: 5px solid #e2e8f0;
-  border-top: 5px solid #2E86AB; /* Bleu primaire */
+  border-top: 5px solid #2E86AB;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
@@ -316,7 +265,7 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Floating Action Button (PDF) */
+/* FAB PDF */
 .fi-fab-wrap {
   position: fixed;
   bottom: 32px;
@@ -328,7 +277,7 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #2E86AB; /* Bleu primaire */
+  background: #2E86AB;
   color: white;
   font-size: 1.8rem;
   border: none;
@@ -345,10 +294,7 @@
   box-shadow: 0 12px 24px rgba(46, 134, 171, 0.35);
 }
 
-.fi-fab.loading {
-  background: #a0aec0;
-  cursor: wait;
-}
+.fi-fab.loading { background: #a0aec0; cursor: wait; }
 
 .fi-fab-tooltip {
   position: absolute;
@@ -366,10 +312,9 @@
   transition: opacity 0.2s;
 }
 
-.fi-fab-wrap:hover .fi-fab-tooltip {
-  opacity: 1;
-}
+.fi-fab-wrap:hover .fi-fab-tooltip { opacity: 1; }
 
+/* Compte de résultat rows */
 .cr-ligne {
   display: flex;
   justify-content: space-between;
@@ -389,7 +334,7 @@
   font-weight: 700;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 2px solid #2E86AB; /* Bleu primaire */
+  border-top: 2px solid #2E86AB;
 }
 
 .montant {
@@ -398,14 +343,425 @@
   text-align: right;
 }
 
-.pourcentage {
-  color: #555;
-  margin-left: 12px;
+.pourcentage { color: #555; margin-left: 12px; }
+.pos { color: #1B8A5A; }
+.neg { color: #E05A5A; }
+
+
+/* ==============================================
+   WALLET SECTION – intégré dans la page Finance
+============================================== */
+.wallet-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 80px;
 }
 
-.pos { 
-  color: #1B8A5A; /* Vert teal pour positif */
+/* Carte solde */
+.wlt-solde-card {
+  background: linear-gradient(135deg, #2E86AB 0%, #17A8B8 100%);
+  border-radius: 15px;
+  padding: 28px;
+  box-shadow: 0 10px 30px rgba(46, 134, 171, 0.25);
 }
-.neg { 
-  color: #E05A5A; /* Rouge pour négatif */
+
+.wlt-solde-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.wlt-solde-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.wlt-solde-value {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wlt-solde-value h2 {
+  font-size: 2.4rem;
+  margin: 0;
+  font-weight: bold;
+}
+
+.wlt-toggle-visibility {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.wlt-toggle-visibility:hover { background: rgba(255,255,255,0.35); }
+
+.wlt-solde-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.wlt-action-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  padding: 10px 22px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.wlt-action-btn:hover { background: rgba(255,255,255,0.3); }
+
+.wlt-action-btn.active {
+  background: white;
+  color: #2E86AB;
+  font-weight: 700;
+}
+
+/* Alertes */
+.wlt-alert {
+  padding: 14px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.wlt-alert.error {
+  background: #fff0f0;
+  color: #E05A5A;
+  border-left: 4px solid #E05A5A;
+}
+
+.wlt-alert.success {
+  background: #edfaf3;
+  color: #1B8A5A;
+  border-left: 4px solid #1B8A5A;
+}
+
+/* Stats grid */
+.wlt-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.wlt-stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.wlt-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.wlt-stat-icon {
+  font-size: 2rem;
+  color: #2E86AB;
+}
+
+.wlt-stat-label {
+  display: block;
+  color: #718096;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.wlt-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+/* Graphiques */
+.wlt-chart-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+}
+
+.wlt-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.wlt-chart-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2d3748;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.wlt-chart-toggle {
+  display: flex;
+  gap: 4px;
+  background: #f0f5fb;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.wlt-chart-toggle button {
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #718096;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.wlt-chart-toggle button:hover { background: #e2e8f0; }
+
+.wlt-chart-toggle button.active {
+  background: #2E86AB;
+  color: white;
+}
+
+.wlt-chart-container { height: 300px; }
+
+/* Formulaire dépôt / retrait */
+.wlt-transaction-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+}
+
+.wlt-transaction-tabs {
+  display: flex;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.wlt-tab {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #718096;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.wlt-tab:hover { background: #f7fafc; }
+
+.wlt-tab.active {
+  color: #2E86AB;
+  border-bottom: 2px solid #2E86AB;
+  font-weight: 700;
+  background: #f0f9ff;
+}
+
+.wlt-transaction-form { padding: 28px; }
+
+.wlt-solde-info {
+  background: #e3f0f5;
+  color: #2E86AB;
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.wlt-form-group { margin-bottom: 20px; }
+
+.wlt-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.wlt-montant-input,
+.wlt-motif-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  color: #2d3748;
+}
+
+.wlt-montant-input:focus,
+.wlt-motif-input:focus {
+  outline: none;
+  border-color: #2E86AB;
+  box-shadow: 0 0 0 3px rgba(46, 134, 171, 0.15);
+}
+
+.wlt-submit-btn {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.wlt-submit-btn.depot {
+  background: #1B8A5A;
+  color: white;
+}
+
+.wlt-submit-btn.depot:hover:not(:disabled) { background: #146b45; }
+
+.wlt-submit-btn.retrait {
+  background: #E05A5A;
+  color: white;
+}
+
+.wlt-submit-btn.retrait:hover:not(:disabled) { background: #c53a3a; }
+
+.wlt-submit-btn:disabled { background: #cbd5e0; cursor: not-allowed; }
+
+/* Historique */
+.wlt-historique-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+}
+
+.wlt-historique-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2d3748;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.wlt-historique-list {
+  border: 1px solid #edf2f7;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.wlt-historique-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #edf2f7;
+  transition: background 0.15s;
+}
+
+.wlt-historique-item:last-child { border-bottom: none; }
+.wlt-historique-item:hover { background: #f7fafc; }
+
+.wlt-historique-info {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.wlt-historique-date {
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+.wlt-historique-type {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.wlt-historique-montant { text-align: right; }
+
+.positif {
+  color: #1B8A5A;
+  font-weight: 700;
+  display: block;
+}
+
+.negatif {
+  color: #E05A5A;
+  font-weight: 700;
+  display: block;
+}
+
+.wlt-no-data {
+  text-align: center;
+  padding: 40px;
+  color: #a0aec0;
+  font-size: 1rem;
+}
+
+/* Responsive wallet */
+@media (max-width: 768px) {
+  .wlt-solde-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .wlt-solde-actions { width: 100%; }
+
+  .wlt-action-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .wlt-historique-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .wlt-historique-montant {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+  }
 }

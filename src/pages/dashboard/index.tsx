@@ -16,7 +16,7 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 
 import "./index.css";
 import { useAuth } from '../../contexts/AuthContext';
-import { useApi } from '../../hooks/useApi';
+import { useApi, useApiFetch } from '../../hooks/useApi';
 
 // ── Utilitaires ──────────────────────────────────────────────────────────────
 function isToday(dateStr: string | Date) {
@@ -206,6 +206,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { get } = useApi();
+  
 
   const [loading, setLoading]               = useState(true);
   const [refreshing, setRefreshing]         = useState(false);

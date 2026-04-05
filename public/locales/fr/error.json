@@ -1,0 +1,4 @@
+{
+  "invalid_credentials": "Email ou mot de passe incorrect",
+  "network_error": "Erreur de connexion au serveur"
+}

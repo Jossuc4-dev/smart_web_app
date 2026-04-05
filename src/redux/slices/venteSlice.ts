@@ -2,6 +2,8 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import BASE_URL from '../../config/ApiConfig';
 import type { CommandeResponse, detailledClient, Facture } from '../../models/interfaces';
+import { useApiFetch } from '../../hooks/useApi';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface CommandeState {
   commands: CommandeResponse[];
@@ -41,8 +43,11 @@ const handleResponse = async (response: Response) => {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
   }
+
+  const data = await response.json()
+  console.log({dataCommand:data})
   
-  return response.json();
+  return data;
 };
 
 // Thunk for fetching commands
@@ -149,13 +154,13 @@ export const validatePayment = createAsyncThunk<
   'commands/validatePayment',
   async ({ id, token, typePaiement = 'CASH' }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${BASE_URL}/vente/commande/${id}/validate`, {
-        method: 'PUT',
+      const response = await fetch(`${BASE_URL}/vente/commande/valid/${id}`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ valide: true, typePaiement }),
+        // body: JSON.stringify({ valide: true, typePaiement }),
       });
       
       return await handleResponse(response);

@@ -1,11 +1,16 @@
 /* src/pages/rh/index.css - Version améliorée 2025 */
 :root {
-  --primary: #2E86AB;           /* Bleu acier */
-  --primary-dark: #17A8B8;      /* Cyan */
-  --accent: #1B8A5A;            /* Vert teal */
+  --primary: #2E86AB;
+  --primary-dark: #17A8B8;
+  --primary-light: #e0f2fe;
+  --accent: #1B8A5A;
+  --accent-light: #d1fae5;
   --success: #1B8A5A;
+  --success-light: #d1fae5;
   --warning: #f59e0b;
+  --warning-light: #fef3c7;
   --danger: #E05A5A;
+  --danger-light: #fee2e2;
   --text: #1e2937;
   --text-secondary: #475569;
   --text-light: #64748b;
@@ -75,10 +80,10 @@
   transform: rotate(180deg);
 }
 
-/* Stats Cards - Design moderne en ligne */
+/* Stats Cards — 4 colonnes */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   margin-bottom: 32px;
 }
@@ -113,6 +118,33 @@
   border-color: var(--primary);
 }
 
+/* Card clickable (postes) */
+.stat-card--clickable {
+  cursor: pointer;
+}
+
+.stat-card--clickable::before {
+  background: linear-gradient(90deg, var(--accent), #34d399);
+}
+
+.stat-card--clickable:hover {
+  border-color: var(--accent);
+  box-shadow: 0 20px 30px -10px rgba(27, 138, 90, 0.2);
+}
+
+.stat-card-chevron {
+  color: var(--accent);
+  font-size: 1rem;
+  opacity: 0.5;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.stat-card--clickable:hover .stat-card-chevron {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
 .stat-icon-wrapper {
   width: 64px;
   height: 64px;
@@ -123,6 +155,7 @@
   justify-content: center;
   font-size: 1.8rem;
   color: var(--primary);
+  flex-shrink: 0;
 }
 
 .stat-icon-wrapper.success {
@@ -133,6 +166,11 @@
 .stat-icon-wrapper.warning {
   background: var(--warning-light);
   color: var(--warning);
+}
+
+.stat-icon-wrapper.accent {
+  background: var(--accent-light);
+  color: var(--accent);
 }
 
 .stat-details {
@@ -269,7 +307,7 @@
   font-weight: 500;
 }
 
-/* Staff Grid - Design amélioré pour cartes employés */
+/* Staff Grid */
 .staff-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -305,21 +343,11 @@
   transition: opacity 0.3s;
 }
 
-.staff-card:hover::before {
-  opacity: 1;
-}
+.staff-card:hover::before { opacity: 1; }
 
-.staff-card.status-primary::before {
-  background: linear-gradient(90deg, var(--primary), #38bdf8);
-}
-
-.staff-card.status-success::before {
-  background: linear-gradient(90deg, var(--success), #34d399);
-}
-
-.staff-card.status-warning::before {
-  background: linear-gradient(90deg, var(--warning), #fbbf24);
-}
+.staff-card.status-primary::before { background: linear-gradient(90deg, var(--primary), #38bdf8); }
+.staff-card.status-success::before { background: linear-gradient(90deg, var(--success), #34d399); }
+.staff-card.status-warning::before { background: linear-gradient(90deg, var(--warning), #fbbf24); }
 
 .staff-card-header {
   padding: 24px 24px 16px;
@@ -396,9 +424,7 @@
   border-bottom: 1px dashed var(--border);
 }
 
-.staff-info-item:last-child {
-  border-bottom: none;
-}
+.staff-info-item:last-child { border-bottom: none; }
 
 .info-icon {
   width: 20px;
@@ -439,21 +465,9 @@
   gap: 8px;
 }
 
-.salary-icon {
-  color: var(--success);
-  font-size: 1.1rem;
-}
-
-.salary-value {
-  font-weight: 700;
-  color: var(--text);
-  font-size: 1.1rem;
-}
-
-.salary-period {
-  color: var(--text-light);
-  font-size: 0.85rem;
-}
+.salary-icon { color: var(--success); font-size: 1.1rem; }
+.salary-value { font-weight: 700; color: var(--text); font-size: 1.1rem; }
+.salary-period { color: var(--text-light); font-size: 0.85rem; }
 
 .chevron-icon {
   color: var(--text-light);
@@ -533,9 +547,7 @@
   margin-bottom: 16px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* FAB */
 .fab-add {
@@ -564,58 +576,22 @@
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
-  .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
+@media (max-width: 1280px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
-  .rh-page {
-    padding: 20px 16px 80px;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .stat-card {
-    padding: 20px;
-  }
-
-  .controls-bar {
-    flex-direction: column;
-  }
-
-  .search-wrapper {
-    width: 100%;
-  }
-
-  .filter-group {
-    width: 100%;
-  }
-
-  .staff-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .fab-add {
-    bottom: 20px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    font-size: 1.5rem;
-  }
+  .rh-page { padding: 20px 16px 80px; }
+  .stats-grid { grid-template-columns: 1fr; gap: 16px; }
+  .stat-card { padding: 20px; }
+  .controls-bar { flex-direction: column; }
+  .search-wrapper { width: 100%; }
+  .filter-group { width: 100%; }
+  .staff-grid { grid-template-columns: 1fr; }
+  .fab-add { bottom: 20px; right: 20px; width: 56px; height: 56px; font-size: 1.5rem; }
 }
 
 @media (max-width: 480px) {
-  .staff-card-header {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .staff-badges {
-    justify-content: center;
-  }
+  .staff-card-header { flex-direction: column; text-align: center; }
+  .staff-badges { justify-content: center; }
 }

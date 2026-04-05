@@ -53,7 +53,7 @@ export const deposit = createAsyncThunk<
 // -----------------------------------------------------------------------------
 export const withdraw = createAsyncThunk<
   Compte,
-  { montant: number, type:string },
+  { montant: number, type:string, motif:string },
   { state: { compte: CompteState } }
 >(
   'compte/withdraw',
@@ -73,7 +73,9 @@ export const withdraw = createAsyncThunk<
         throw new Error(`Erreur ${response.status}`);
       }
 
-      return await response.json();
+      const dataResponse = await response.json()
+      console.log({data,dataResponse})
+      return dataResponse;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Erreur lors du retrait');
     }

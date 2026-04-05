@@ -2,16 +2,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../redux/store';
-import {
-  fetchAllUsers,
-} from '../../redux/slices/rhSlices';
+import { fetchAllUsers } from '../../redux/slices/rhSlices';
 import {
   selectAllUsers as selectAllUsersSelector,
   selectUsersLoading as selectUsersLoadingSelector,
 } from '../../redux/selectors/rh.selector';
 import { useAuth } from '../../contexts/AuthContext';
 
-// Icônes
 import {
   FaUsers,
   FaMoneyBillWave,
@@ -24,11 +21,10 @@ import {
   FaUserTie,
   FaUserClock,
   FaBriefcase,
-  FaEnvelope,
-  FaPhone,
 } from 'react-icons/fa';
 
 import './index.css';
+import BASE_URL from '../../config/ApiConfig';
 
 type FilterType = 'all' | 'admin' | 'employee';
 
@@ -43,48 +39,53 @@ export default function RHScreen() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
   const [errorAuth, setErrorAuth] = useState(false);
+  const [totalProfessions, setTotalProfessions] = useState<number>(0);
 
-  // Vérification rôle ADMIN
   useEffect(() => {
-    if (user?.role !== 'ADMIN') {
-      setErrorAuth(true);
-    }
+    if (user?.role !== 'ADMIN') setErrorAuth(true);
   }, [user]);
 
-  // Chargement initial des données
   useEffect(() => {
     if (token && !errorAuth) {
       dispatch(fetchAllUsers(token));
     }
   }, [token, dispatch, errorAuth]);
 
-  // Statistiques globales
+  // ✅ Récupération du nombre de postes via GET /rh/profession
+  useEffect(() => {
+    if (token && !errorAuth) {
+      fetch(`${BASE_URL}/rh/profession`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data: unknown[]) => {
+          if (Array.isArray(data)) setTotalProfessions(data.length);
+        })
+        .catch(() => setTotalProfessions(0));
+    }
+  }, [token, errorAuth]);
+
   const globalStats = useMemo(() => {
     const totalEmployees = users?.length || 0;
     const totalSalary = users?.reduce((sum, u) => sum + (u.profession?.salaire || 0), 0) || 0;
-    const onLeave = users?.filter(u =>
-      u.conges?.some((c) => new Date(c.dateFin) >= new Date())
-    ).length || 0;
+    const onLeave =
+      users?.filter(u => u.conges?.some((c) => new Date(c.dateFin) >= new Date())).length || 0;
     const admins = users?.filter(u => u.role === 'ADMIN').length || 0;
-
     return { totalEmployees, totalSalary, onLeave, admins };
   }, [users]);
 
-  // Filtrage
   const filteredUsers = useMemo(() => {
     let list = users || [];
-
     if (filter === 'admin') list = list.filter((u) => u.role === 'ADMIN');
     if (filter === 'employee') list = list.filter((u) => u.role !== 'ADMIN');
-
     if (search.trim()) {
       const term = search.toLowerCase().trim();
-      list = list.filter((u) => 
-        u.nom?.toLowerCase().includes(term) ||
-        u.profession?.poste?.toLowerCase().includes(term)
+      list = list.filter(
+        (u) =>
+          u.nom?.toLowerCase().includes(term) ||
+          u.profession?.poste?.toLowerCase().includes(term)
       );
     }
-
     return list;
   }, [users, filter, search]);
 
@@ -98,9 +99,7 @@ export default function RHScreen() {
   };
 
   const getStatusColor = (user: any) => {
-    if (user.conges?.some((c: any) => new Date(c.dateFin) >= new Date())) {
-      return 'warning';
-    }
+    if (user.conges?.some((c: any) => new Date(c.dateFin) >= new Date())) return 'warning';
     return user.role === 'ADMIN' ? 'primary' : 'success';
   };
 
@@ -128,7 +127,6 @@ export default function RHScreen() {
 
   return (
     <div className="rh-page">
-      {/* Header */}
       <header className="rh-header">
         <div className="header-left">
           <p className="header-subtitle">Gérez votre équipe et leurs informations</p>
@@ -140,7 +138,7 @@ export default function RHScreen() {
         </div>
       </header>
 
-      {/* Stats Cards - En ligne */}
+      {/* Stats Cards — 4 colonnes */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon-wrapper">
@@ -158,9 +156,7 @@ export default function RHScreen() {
             <FaMoneyBillWave className="stat-icon" />
           </div>
           <div className="stat-details">
-            <span className="stat-value">
-              {globalStats.totalSalary.toLocaleString()} Ar
-            </span>
+            <span className="stat-value">{globalStats.totalSalary.toLocaleString()} Ar</span>
             <span className="stat-label">Masse salariale</span>
             <span className="stat-trend">Mensuelle</span>
           </div>
@@ -174,9 +170,27 @@ export default function RHScreen() {
             <span className="stat-value">{globalStats.onLeave}</span>
             <span className="stat-label">En congé</span>
             <span className="stat-trend">
-              {((globalStats.onLeave / globalStats.totalEmployees) * 100 || 0).toFixed(1)}% de l'équipe
+              {((globalStats.onLeave / globalStats.totalEmployees) * 100 || 0).toFixed(1)}% de
+              l'équipe
             </span>
           </div>
+        </div>
+
+        {/* ✅ Card Postes — cliquable → /rh/professions */}
+        <div
+          className="stat-card stat-card--clickable"
+          onClick={() => navigate('/rh/profession')}
+          title="Gérer les postes"
+        >
+          <div className="stat-icon-wrapper accent">
+            <FaBriefcase className="stat-icon" />
+          </div>
+          <div className="stat-details">
+            <span className="stat-value">{totalProfessions}</span>
+            <span className="stat-label">Postes</span>
+            <span className="stat-trend">Dans l'entreprise</span>
+          </div>
+          <FaChevronRight className="stat-card-chevron" />
         </div>
       </div>
 
@@ -219,20 +233,18 @@ export default function RHScreen() {
         </div>
       </div>
 
-      {/* Résultats */}
       <div className="results-info">
         <span>{filteredUsers.length} collaborateur(s) trouvé(s)</span>
       </div>
 
-      {/* Grille des employés */}
       {filteredUsers.length === 0 ? (
         <div className="empty-state">
           <FaSearch className="empty-icon" />
           <h3>Aucun résultat</h3>
           <p>Aucun collaborateur ne correspond à votre recherche</p>
           {(search || filter !== 'all') && (
-            <button 
-              className="btn-primary" 
+            <button
+              className="btn-primary"
               onClick={() => {
                 setSearch('');
                 setFilter('all');
@@ -251,9 +263,7 @@ export default function RHScreen() {
               onClick={() => navigate(`/rh/${emp.id}`)}
             >
               <div className="staff-card-header">
-                <div className="staff-avatar">
-                  {getInitials(emp.nom || '')}
-                </div>
+                <div className="staff-avatar">{getInitials(emp.nom || '')}</div>
                 <div className="staff-badges">
                   {emp.role === 'ADMIN' && (
                     <span className="badge badge-admin">
@@ -270,7 +280,6 @@ export default function RHScreen() {
 
               <div className="staff-card-body">
                 <h3 className="staff-name">{emp.nom || 'Nom non renseigné'}</h3>
-                
                 <div className="staff-info-item">
                   <FaBriefcase className="info-icon" />
                   <div>
@@ -295,7 +304,6 @@ export default function RHScreen() {
         </div>
       )}
 
-      {/* FAB pour ajouter */}
       <button className="fab-add" onClick={() => navigate('/rh/add')}>
         <FaUserPlus />
       </button>

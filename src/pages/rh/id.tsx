@@ -25,6 +25,7 @@ import {
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import './id.css';
+import BASE_URL from '../../config/ApiConfig';
 
 interface UserDetail {
   id: number;
@@ -33,8 +34,8 @@ interface UserDetail {
   role: string;
   profession: {
     poste: string;
-    salaire: number;
   };
+  salaire: number;
   activities: Array<{
     id: number;
     date: string;
@@ -88,8 +89,6 @@ export default function UserDetailScreen() {
   // Pagination activités
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-
-  const BASE_URL = 'http://localhost:3000'; // À remplacer par votre config
 
   const calculateDaysBetween = (start: string, end: string) => {
     const startDate = new Date(start);
@@ -309,7 +308,7 @@ export default function UserDetailScreen() {
           <div className="stat-item">
             <FaMoneyBillWave className="stat-icon" />
             <span className="stat-label">Salaire</span>
-            <span className="stat-value">{utilisateur.profession.salaire.toLocaleString()} Ar</span>
+            <span className="stat-value">{utilisateur.salaire.toLocaleString()} Ar</span>
           </div>
           <div className="stat-item">
             <FaCalendarAlt className="stat-icon" />
@@ -398,7 +397,7 @@ export default function UserDetailScreen() {
                 <div className="info-row">
                   <span className="info-label">Salaire</span>
                   <span className="info-value salary">
-                    {utilisateur.profession.salaire.toLocaleString()} Ar
+                    {utilisateur.salaire.toLocaleString()} Ar
                   </span>
                 </div>
                 <div className="info-row">

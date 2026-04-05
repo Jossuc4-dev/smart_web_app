@@ -1,5 +1,5 @@
 // src/pages/ventes/add/[id].tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../redux/store';
 import { fetchProducts } from '../../../redux/slices/stockSlice';
@@ -18,7 +18,8 @@ import {
   FaCalendarAlt,
   FaMoneyBillWave,
   FaCreditCard,
-  FaMobileAlt
+  FaMobileAlt,
+  FaSearch
 } from 'react-icons/fa';
 import './form.css';
 import BASE_URL from '../../../config/ApiConfig';
@@ -33,7 +34,6 @@ interface Client {
   adresse?: string;
 }
 
-// Type pour la création de vente
 interface CreateVenteRequest {
   idProduit: number;
   quantite: number;
@@ -42,8 +42,8 @@ interface CreateVenteRequest {
     email: string;
     telephone: string;
   };
-  datePaiement: string; // Format: YYYY-MM-DD
-  typePaiement: 'CASH' | 'CARTE' | 'MOBILE_MONEY' | 'CREDIT';
+  datePaiement: string;
+  typePaiement: 'CASH' | 'BANK' | 'MOBILE_MONEY' | 'CREDIT';
 }
 
 interface NewClientData {
@@ -67,9 +67,11 @@ export default function AddCommandeForm() {
   const [submitting, setSubmitting] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
 
-  // État pour le client (soit existant, soit nouveau)
+  const clients = useAppSelector(state => state.vente.clients) || [];
+
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [newClient, setNewClient] = useState<NewClientData>({
     nom: '',
     email: '',
@@ -78,16 +80,25 @@ export default function AddCommandeForm() {
   });
   const [newClientErrors, setNewClientErrors] = useState<Record<string, string>>({});
 
-  // État pour la commande
   const [quantite, setQuantite] = useState<number>(1);
   const [datePaiement, setDatePaiement] = useState<string>(
-    new Date().toISOString().split('T')[0] // Date du jour au format YYYY-MM-DD
+    new Date().toISOString().split('T')[0]
   );
-  const [typePaiement, setTypePaiement] = useState<'CASH' | 'CARTE' | 'MOBILE_MONEY' | 'CREDIT'>('CASH');
+  const [typePaiement, setTypePaiement] = useState<'CASH' | 'BANK' | 'MOBILE_MONEY' | 'CREDIT'>('CASH');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Gestion de la session expirée
+  // Filtrer les clients selon la recherche
+  const filteredClients = useMemo(() => {
+    if (!searchTerm.trim()) return clients;
+    const term = searchTerm.toLowerCase().trim();
+    return clients.filter((client: Client) =>
+      client.nom.toLowerCase().includes(term) ||
+      client.email.toLowerCase().includes(term) ||
+      client.telephone.toLowerCase().includes(term)
+    );
+  }, [clients, searchTerm]);
+
   useEffect(() => {
     if (sessionExpired) {
       const timer = setTimeout(() => {
@@ -161,7 +172,6 @@ export default function AddCommandeForm() {
 
     setSubmitting(true);
     try {
-      // Construire la requête selon le format attendu
       const venteData: CreateVenteRequest = {
         idProduit: Number(id),
         quantite: quantite,
@@ -194,13 +204,12 @@ export default function AddCommandeForm() {
         return;
       }
 
-
       if (response.ok) {
         const data: { success: boolean, data: CommandeResponse } = await response.json();
         const commandeResponse = data.data;
         console.log('Réponse du serveur:', commandeResponse);
         const blobPDf = generateInvoicePdf(commandeResponse, () => {
-          alert("Generation de pdf échouée. Veuillez réessayer.");
+          alert("Génération de pdf échouée. Veuillez réessayer.");
         });
 
         console.log(blobPDf)
@@ -208,18 +217,16 @@ export default function AddCommandeForm() {
         if (blobPDf) {
           const formData = new FormData();
           formData.append(
-            'facture',                                              // nom du champ fichier
+            'facture',
             blobPDf,
             `facture-${commandeResponse.reference || commandeResponse.id}.pdf`
           );
-          formData.append('email', commandeResponse.client.email); // mail du client
+          formData.append('email', commandeResponse.client.email);
 
-          // 3. Envoyer au backend
           const sendFacture = await fetch(`${BASE_URL}/vente/facture/send`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
-              // ⚠️ PAS de Content-Type ici : fetch le génère automatiquement avec le boundary
             },
             body: formData,
           });
@@ -322,28 +329,63 @@ export default function AddCommandeForm() {
           </div>
 
           {!showNewClientForm && !selectedClient && (
-            <div>
+            <>
+              {/* Barre de recherche */}
               <div className="client-search-wrapper">
-                <FaUser className="input-icon" />
+                <FaSearch className="input-icon" />
                 <input
                   type="text"
-                  placeholder="Nom du client"
-                  value={newClient.nom}
-                  onChange={(e) => {
-                    setShowNewClientForm(true);
-                    setNewClient({ ...newClient, nom: e.target.value });
-                  }}
+                  placeholder="Rechercher par nom, email ou téléphone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className={`client-search-input ${errors.client ? 'error' : ''}`}
                 />
               </div>
               {errors.client && <span className="error-message">{errors.client}</span>}
-            </div>
+
+              {/* Liste des clients */}
+              {filteredClients.length > 0 ? (
+                <div className="clients-list">
+                  {filteredClients.map((client: Client) => (
+                    <div
+                      key={client.id}
+                      className="client-card"
+                      onClick={() => setSelectedClient(client)}
+                    >
+                      <div className="client-card-header">
+                        <strong>{client.nom}</strong>
+                      </div>
+                      <div className="client-card-details">
+                        <span><FaEnvelope /> {client.email}</span>
+                        <span><FaPhone /> {client.telephone}</span>
+                      </div>
+                      {client.adresse && (
+                        <div className="client-card-address">
+                          <FaMapMarkerAlt /> {client.adresse}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="no-clients-message">
+                  <p>Aucun client trouvé</p>
+                  <button
+                    type="button"
+                    className="add-client-from-empty"
+                    onClick={() => setShowNewClientForm(true)}
+                  >
+                    <FaPlus /> Créer un nouveau client
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
           {showNewClientForm && (
             <div className="new-client-form">
               <div className="form-header">
-                <h4>Informations client</h4>
+                <h4>Nouveau client</h4>
                 <button
                   className="close-btn"
                   onClick={() => {
@@ -357,7 +399,7 @@ export default function AddCommandeForm() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="client-nom">Nom *</label>
+                <label htmlFor="client-nom">Nom complet *</label>
                 <div className="input-wrapper">
                   <FaUser className="input-icon" />
                   <input
@@ -402,6 +444,51 @@ export default function AddCommandeForm() {
                   />
                 </div>
                 {newClientErrors.telephone && <span className="error-message">{newClientErrors.telephone}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="client-adresse">Adresse (optionnel)</label>
+                <div className="input-wrapper">
+                  <FaMapMarkerAlt className="input-icon" />
+                  <input
+                    id="client-adresse"
+                    type="text"
+                    value={newClient.adresse || ''}
+                    onChange={(e) => setNewClient({ ...newClient, adresse: e.target.value })}
+                    placeholder="Adresse du client"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {selectedClient && (
+            <div className="selected-client-card">
+              <div className="selected-client-header">
+                <div className="selected-client-icon">
+                  <FaUser />
+                </div>
+                <div className="selected-client-info">
+                  <strong>{selectedClient.nom}</strong>
+                  <div className="selected-client-contact">
+                    <span><FaEnvelope /> {selectedClient.email}</span>
+                    <span><FaPhone /> {selectedClient.telephone}</span>
+                  </div>
+                  {selectedClient.adresse && (
+                    <div className="selected-client-address">
+                      <FaMapMarkerAlt /> {selectedClient.adresse}
+                    </div>
+                  )}
+                </div>
+                <button
+                  className="change-client-btn"
+                  onClick={() => {
+                    setSelectedClient(null);
+                    setSearchTerm('');
+                  }}
+                >
+                  Changer
+                </button>
               </div>
             </div>
           )}
@@ -455,13 +542,13 @@ export default function AddCommandeForm() {
               <span>Espèces</span>
             </label>
 
-            <label className={`payment-option ${typePaiement === 'CARTE' ? 'selected' : ''}`}>
+            <label className={`payment-option ${typePaiement === 'BANK' ? 'selected' : ''}`}>
               <input
                 type="radio"
                 name="typePaiement"
-                value="CARTE"
-                checked={typePaiement === 'CARTE'}
-                onChange={(e) => setTypePaiement(e.target.value as 'CARTE')}
+                value="BANK"
+                checked={typePaiement === 'BANK'}
+                onChange={(e) => setTypePaiement(e.target.value as 'BANK')}
               />
               <FaCreditCard className="payment-icon" />
               <span>Carte bancaire</span>
@@ -502,7 +589,7 @@ export default function AddCommandeForm() {
               type="date"
               value={datePaiement}
               onChange={(e) => setDatePaiement(e.target.value)}
-              className={`date-input ${errors.datePaiement ? 'error' : ''}`}
+              className={`text-input ${errors.datePaiement ? 'error' : ''}`}
               min={new Date().toISOString().split('T')[0]}
             />
           </div>
@@ -511,7 +598,7 @@ export default function AddCommandeForm() {
 
         {/* Récapitulatif */}
         <div className="order-summary">
-          <h3>Récapitulatif</h3>
+          <h3>Récapitulatif de la commande</h3>
           <div className="summary-row">
             <span>Produit:</span>
             <span>{produit.nom}</span>
@@ -528,20 +615,20 @@ export default function AddCommandeForm() {
             <span>Mode de paiement:</span>
             <span className="payment-summary">
               {typePaiement === 'CASH' && 'Espèces'}
-              {typePaiement === 'CARTE' && 'Carte bancaire'}
+              {typePaiement === 'BANK' && 'Carte bancaire'}
               {typePaiement === 'MOBILE_MONEY' && 'Mobile Money'}
               {typePaiement === 'CREDIT' && 'Crédit'}
             </span>
           </div>
           <div className="summary-row total">
-            <span>Total:</span>
+            <span>Total TTC:</span>
             <span>{totalAmount.toLocaleString()} Ar</span>
           </div>
         </div>
 
         {errors.submit && (
           <div className="submit-error">
-            {errors.submit}
+            <FaExclamationTriangle /> {errors.submit}
           </div>
         )}
 
@@ -563,7 +650,9 @@ export default function AddCommandeForm() {
                 Création...
               </>
             ) : (
-              'Créer la vente'
+              <>
+                <FaCheck /> Créer la vente
+              </>
             )}
           </button>
         </div>

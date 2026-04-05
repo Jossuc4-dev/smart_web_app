@@ -28,7 +28,7 @@ const Layout = () => {
   // Notifications privées (liées à l'entreprise de l'utilisateur)
   useSocketEvent<NotificationPayload>(
     token,
-    user?.profession.idEntreprise ? `notification:user:${user.profession.idEntreprise}` : '__disabled__',
+    user?.profession.entreprise.id ? `notification:user:${user.profession.entreprise.id}` : '__disabled__',
     addToast
   );
   // ────────────────────────────────────────────────────────────────

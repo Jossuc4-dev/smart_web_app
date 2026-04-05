@@ -820,3 +820,284 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* À ajouter dans form.css */
+
+/* Styles pour la liste des clients */
+.clients-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.client-card {
+  background: #fff;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.client-card:hover {
+  border-color: #05aa65;
+  background: #f8f9fa;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(5, 170, 101, 0.1);
+}
+
+.client-card-header strong {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.client-card-details {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.client-card-details span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #666;
+}
+
+.client-card-details svg {
+  color: #05aa65;
+  font-size: 12px;
+}
+
+.client-card-address {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #888;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.client-card-address svg {
+  color: #05aa65;
+  font-size: 12px;
+}
+
+/* Message quand aucun client */
+.no-clients-message {
+  text-align: center;
+  padding: 40px 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin-top: 16px;
+}
+
+.no-clients-message p {
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.add-client-from-empty {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #05aa65;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-client-from-empty:hover {
+  background: #048f54;
+  transform: translateY(-1px);
+}
+
+/* Carte client sélectionné améliorée */
+.selected-client-card {
+  background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+  border: 2px solid #05aa65;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.selected-client-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.selected-client-icon {
+  width: 48px;
+  height: 48px;
+  background: #05aa65;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+}
+
+.selected-client-info {
+  flex: 1;
+}
+
+.selected-client-info strong {
+  font-size: 18px;
+  color: #2d6a4f;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.selected-client-contact {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.selected-client-contact span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #2d6a4f;
+}
+
+.selected-client-address {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #2d6a4f;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(5, 170, 101, 0.3);
+}
+
+.change-client-btn {
+  padding: 8px 16px;
+  background: white;
+  border: 2px solid #05aa65;
+  border-radius: 8px;
+  color: #05aa65;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.change-client-btn:hover {
+  background: #05aa65;
+  color: white;
+}
+
+/* Amélioration de la barre de recherche */
+.client-search-wrapper {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.client-search-wrapper .input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #05aa65;
+  font-size: 16px;
+  z-index: 1;
+}
+
+.client-search-input {
+  width: 100%;
+  padding: 14px 14px 14px 44px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 15px;
+  transition: all 0.2s;
+  outline: none;
+  background: #fff;
+}
+
+.client-search-input:focus {
+  border-color: #05aa65;
+  box-shadow: 0 0 0 3px rgba(5, 170, 101, 0.1);
+}
+
+.client-search-input.error {
+  border-color: #dc3545;
+}
+
+/* Bouton retour amélioré */
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #f0f5f0;
+  border: none;
+  border-radius: 10px;
+  color: #05aa65;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: #05aa65;
+  color: white;
+  transform: translateX(-2px);
+}
+
+/* Scrollbar personnalisée pour la liste des clients */
+.clients-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.clients-list::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 3px;
+}
+
+.clients-list::-webkit-scrollbar-thumb {
+  background: #05aa65;
+  border-radius: 3px;
+}
+
+.clients-list::-webkit-scrollbar-thumb:hover {
+  background: #048f54;
+}
+
+/* Animation pour les cartes clients */
+.client-card {
+  animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

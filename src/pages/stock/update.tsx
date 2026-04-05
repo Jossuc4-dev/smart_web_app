@@ -2,163 +2,140 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  LuSave,
-  LuArrowLeft,
-  LuPackage,
-  LuDollarSign,
-  LuTag,
-  LuHash,
-  LuBox,
-  LuCircleAlert,
-  LuCircleCheck,
-  LuLoader
+import {
+  LuSave, LuArrowLeft, LuPackage, LuDollarSign,
+  LuTag, LuHash, LuCircleAlert, LuCircleCheck, LuLoader
 } from 'react-icons/lu';
 import './update.css';
 import BASE_URL from '../../config/ApiConfig';
+
+// ─── Types alignés avec ProduitUpdateInput côté API ──────────────────────────
+// ProduitUpdateInput = { nom, prix, type, vente?, finalite, paiement }
+// On n'envoie PAS quantite : la quantité est gérée uniquement par les transactions.
 
 interface ProductData {
   id: number;
   numero: string;
   nom: string;
   type: string;
-  quantite: number;
+  quantite: number;    // affiché en lecture seule
   prixAchat: number;
   prixVente: number;
+  finalite: 'VENTE' | 'MATIERE_PREMIERE';
+  paiement: 'CASH' | 'CREDIT' | 'BANK' | 'MOBILE_MONEY' | 'CHECK';
+}
+
+// Seuls ces champs sont modifiables via PATCH
+interface UpdatePayload {
+  nom: string;
+  prix: number;
+  type: string;
+  vente: number;
+  finalite: 'VENTE' | 'MATIERE_PREMIERE';
+  paiement: 'CASH' | 'CREDIT' | 'BANK' | 'MOBILE_MONEY' | 'CHECK';
 }
 
 export default function UpdateProductScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { token } = useAuth();
-  
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [product, setProduct] = useState<ProductData | null>(null);
 
-  // États du formulaire
-  const [formData, setFormData] = useState({
-    numero: '',
+  const [formData, setFormData] = useState<{
+    nom: string;
+    type: string;
+    prix: string;
+    vente: string;
+    finalite: 'VENTE' | 'MATIERE_PREMIERE';
+    paiement: 'CASH' | 'CREDIT' | 'BANK' | 'MOBILE_MONEY' | 'CHECK';
+  }>({
     nom: '',
     type: '',
-    quantite: '',
-    prixAchat: '',
-    prixVente: '',
+    prix: '',
+    vente: '',
+    finalite: 'VENTE',
+    paiement: 'CASH',
   });
 
-  // Charger les données du produit
+  // ── Chargement ──
   useEffect(() => {
     const fetchProduct = async () => {
       if (!token || !id) return;
-
       try {
         setLoading(true);
-        const response = await fetch(`${BASE_URL}/stock/produit/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+        const res = await fetch(`${BASE_URL}/stock/produit/${id}`, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         });
-
-        if (!response.ok) {
-          throw new Error('Erreur lors du chargement du produit');
-        }
-
-        const data: ProductData = await response.json();
+        if (!res.ok) throw new Error('Erreur lors du chargement du produit');
+        const data: ProductData = await res.json();
         setProduct(data);
         setFormData({
-          numero: data.numero || '',
           nom: data.nom || '',
           type: data.type || '',
-          quantite: data.quantite?.toString() || '',
-          prixAchat: data.prixAchat?.toString() || '',
-          prixVente: data.prixVente?.toString() || '',
+          prix: data.prixAchat?.toString() || '',
+          vente: data.prixVente?.toString() || '',
+          finalite: data.finalite || 'VENTE',
+          paiement: data.paiement || 'CASH',
         });
-        setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       } finally {
         setLoading(false);
       }
     };
-
     fetchProduct();
   }, [id, token]);
 
-  // Gérer les changements dans le formulaire
   const handleChange = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Valider le formulaire
-  const isFormValid = () => {
-    return (
-      formData.numero.trim() !== '' &&
-      formData.nom.trim() !== '' &&
-      formData.type.trim() !== '' &&
-      formData.quantite.trim() !== '' &&
-      !isNaN(Number(formData.quantite)) &&
-      Number(formData.quantite) >= 0 &&
-      formData.prixAchat.trim() !== '' &&
-      !isNaN(Number(formData.prixAchat)) &&
-      Number(formData.prixAchat) >= 0 &&
-      formData.prixVente.trim() !== '' &&
-      !isNaN(Number(formData.prixVente)) &&
-      Number(formData.prixVente) >= 0
-    );
-  };
+  const isFormValid = () =>
+    formData.nom.trim() !== '' &&
+    formData.type.trim() !== '' &&
+    formData.prix.trim() !== '' &&
+    !isNaN(Number(formData.prix)) &&
+    Number(formData.prix) >= 0;
 
-  // Soumettre le formulaire
+  // ── Soumission ──
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!isFormValid()) {
-      setError('Veuillez remplir tous les champs correctement');
-      return;
-    }
-
-    if (!token || !id) {
-      setError('Erreur d\'authentification');
-      return;
-    }
+    if (!isFormValid()) { setError('Veuillez remplir tous les champs correctement'); return; }
+    if (!token || !id) { setError("Erreur d'authentification"); return; }
 
     try {
       setSubmitting(true);
       setError(null);
 
-      const updatedData = {
+      // ✅ Payload aligné sur ProduitUpdateInput — PAS de quantite
+      const payload: UpdatePayload = {
         nom: formData.nom,
-        numero: formData.numero,
-        quantite: parseInt(formData.quantite) || 0,
-        prixAchat: parseInt(formData.prixAchat) || 0,
-        prixVente: parseInt(formData.prixVente) || 0,
+        prix: Number(formData.prix),
         type: formData.type,
+        vente: Number(formData.vente) || 0,
+        finalite: formData.finalite,
+        paiement: formData.paiement,
       };
 
-      const response = await fetch(`${BASE_URL}/stock/produit/${id}`, {
+      const res = await fetch(`${BASE_URL}/stock/produit/${id}`, {
         method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedData),
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error('Erreur lors de la mise à jour');
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Erreur lors de la mise à jour');
       }
 
-      const updatedProduct = await response.json();
-      setProduct(updatedProduct);
+      setProduct(data.data);
       setSuccess(true);
-
-      // Rediriger après 2 secondes
-      setTimeout(() => {
-        navigate(`/stock/${id}`);
-      }, 2000);
-
+      setTimeout(() => navigate(`/stock/${id}`), 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
@@ -166,180 +143,127 @@ export default function UpdateProductScreen() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="update-product-loading">
-        <div className="spinner" />
-        <p>Chargement du produit...</p>
-      </div>
-    );
-  }
+  // ── États ──
+  if (loading) return (
+    <div className="update-product-loading">
+      <div className="spinner" />
+      <p>Chargement du produit...</p>
+    </div>
+  );
 
-  if (error && !product) {
-    return (
-      <div className="update-product-error">
-        <LuCircleAlert size={48} />
-        <h2>Erreur</h2>
-        <p>{error}</p>
-        <button onClick={() => navigate('/stock')} className="back-to-list">
-          Retour à la liste
-        </button>
-      </div>
-    );
-  }
+  if (error && !product) return (
+    <div className="update-product-error">
+      <LuCircleAlert size={48} />
+      <h2>Erreur</h2>
+      <p>{error}</p>
+      <button onClick={() => navigate('/stock')} className="back-to-list">Retour à la liste</button>
+    </div>
+  );
+
+  const PAYMENT_OPTIONS = ['CASH', 'CREDIT', 'BANK', 'MOBILE_MONEY', 'CHECK'] as const;
+  const margeUnitaire = (Number(formData.vente) || 0) - (Number(formData.prix) || 0);
 
   return (
     <div className="update-product-container">
-      {/* Header */}
       <div className="update-header">
-        <button 
-          className="back-button"
-          onClick={() => navigate(`/stock/${id}`)}
-        >
-          <LuArrowLeft size={20} />
-          Retour
+        <button className="back-button" onClick={() => navigate(`/stock/${id}`)}>
+          <LuArrowLeft size={20} /> Retour
         </button>
         <h1>Modifier le produit</h1>
       </div>
 
-      {/* Formulaire */}
       <div className="update-form-container">
         <form onSubmit={handleSubmit} className="update-form">
-          {/* Image ou icône du produit */}
           <div className="form-header">
-            <div className="product-avatar">
-              <LuPackage size={48} />
-            </div>
+            <div className="product-avatar"><LuPackage size={48} /></div>
             <div className="product-title">
               <h2>{product?.nom}</h2>
-              <span className="product-id">ID: {product?.id}</span>
+              <span className="product-id">
+                ID : {product?.id} — Réf : {product?.numero}
+              </span>
             </div>
           </div>
 
-          {/* Grille du formulaire */}
           <div className="form-grid">
-            {/* Numéro */}
-            <div className="form-group">
-              <label htmlFor="numero">
-                <LuHash className="input-icon" />
-                Numéro du produit
-              </label>
-              <input
-                type="text"
-                id="numero"
-                value={formData.numero}
-                onChange={(e) => handleChange('numero', e.target.value)}
-                placeholder="Ex: PROD-001"
-                className={!formData.numero && error ? 'error' : ''}
-              />
-              {!formData.numero && error && (
-                <span className="error-message">Champ requis</span>
-              )}
-            </div>
-
             {/* Nom */}
             <div className="form-group">
-              <label htmlFor="nom">
-                <LuTag className="input-icon" />
-                Nom du produit
-              </label>
+              <label htmlFor="nom"><LuTag className="input-icon" /> Nom du produit</label>
               <input
-                type="text"
-                id="nom"
+                type="text" id="nom"
                 value={formData.nom}
-                onChange={(e) => handleChange('nom', e.target.value)}
-                placeholder="Ex: Ordinateur portable"
+                onChange={e => handleChange('nom', e.target.value)}
+                placeholder="Nom du produit"
                 className={!formData.nom && error ? 'error' : ''}
               />
-              {!formData.nom && error && (
-                <span className="error-message">Champ requis</span>
-              )}
             </div>
 
             {/* Catégorie */}
             <div className="form-group">
-              <label htmlFor="type">
-                <LuBox className="input-icon" />
-                Catégorie
-              </label>
+              <label htmlFor="type"><LuHash className="input-icon" /> Catégorie</label>
               <input
-                type="text"
-                id="type"
+                type="text" id="type"
                 value={formData.type}
-                onChange={(e) => handleChange('type', e.target.value)}
-                placeholder="Ex: Électronique"
+                onChange={e => handleChange('type', e.target.value)}
+                placeholder="Ex : Électronique"
                 className={!formData.type && error ? 'error' : ''}
               />
-              {!formData.type && error && (
-                <span className="error-message">Champ requis</span>
-              )}
-            </div>
-
-            {/* Quantité */}
-            <div className="form-group">
-              <label htmlFor="quantite">
-                <LuPackage className="input-icon" />
-                Quantité en stock
-              </label>
-              <input
-                type="number"
-                id="quantite"
-                value={formData.quantite}
-                onChange={(e) => handleChange('quantite', e.target.value)}
-                placeholder="0"
-                min="0"
-                step="1"
-                className={(!formData.quantite || Number(formData.quantite) < 0) && error ? 'error' : ''}
-              />
-              {(!formData.quantite || Number(formData.quantite) < 0) && error && (
-                <span className="error-message">Quantité invalide</span>
-              )}
             </div>
 
             {/* Prix d'achat */}
             <div className="form-group">
-              <label htmlFor="prixAchat">
-                <LuDollarSign className="input-icon" />
-                Prix d'achat (Ar)
-              </label>
+              <label htmlFor="prix"><LuDollarSign className="input-icon" /> Prix d'achat (Ar)</label>
               <input
-                type="number"
-                id="prixAchat"
-                value={formData.prixAchat}
-                onChange={(e) => handleChange('prixAchat', e.target.value)}
+                type="number" id="prix" min="0" step="100"
+                value={formData.prix}
+                onChange={e => handleChange('prix', e.target.value)}
                 placeholder="0"
-                min="0"
-                step="100"
-                className={(!formData.prixAchat || Number(formData.prixAchat) < 0) && error ? 'error' : ''}
+                className={(!formData.prix || Number(formData.prix) < 0) && error ? 'error' : ''}
               />
-              {(!formData.prixAchat || Number(formData.prixAchat) < 0) && error && (
-                <span className="error-message">Prix invalide</span>
-              )}
             </div>
 
             {/* Prix de vente */}
             <div className="form-group">
-              <label htmlFor="prixVente">
-                <LuDollarSign className="input-icon" />
-                Prix de vente (Ar)
-              </label>
+              <label htmlFor="vente"><LuDollarSign className="input-icon" /> Prix de vente (Ar)</label>
               <input
-                type="number"
-                id="prixVente"
-                value={formData.prixVente}
-                onChange={(e) => handleChange('prixVente', e.target.value)}
+                type="number" id="vente" min="0" step="100"
+                value={formData.vente}
+                onChange={e => handleChange('vente', e.target.value)}
                 placeholder="0"
-                min="0"
-                step="100"
-                className={(!formData.prixVente || Number(formData.prixVente) < 0) && error ? 'error' : ''}
               />
-              {(!formData.prixVente || Number(formData.prixVente) < 0) && error && (
-                <span className="error-message">Prix invalide</span>
-              )}
+            </div>
+
+            {/* Finalité */}
+            <div className="form-group">
+              <label>Finalité</label>
+              <select
+                value={formData.finalite}
+                onChange={e => handleChange('finalite', e.target.value)}
+                style={{ padding: '14px 16px', background: '#f9f9f9', border: '2px solid #e0e0e0', borderRadius: '12px', fontSize: '15px' }}
+              >
+                <option value="VENTE">Produit à vendre</option>
+                <option value="MATIERE_PREMIERE">Matière première</option>
+              </select>
+            </div>
+
+            {/* Mode de paiement */}
+            <div className="form-group">
+              <label>Mode de paiement</label>
+              <select
+                value={formData.paiement}
+                onChange={e => handleChange('paiement', e.target.value)}
+                style={{ padding: '14px 16px', background: '#f9f9f9', border: '2px solid #e0e0e0', borderRadius: '12px', fontSize: '15px' }}
+              >
+                {PAYMENT_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
             </div>
           </div>
 
-          {/* Messages d'erreur globaux */}
+          {/* Note : quantite est en lecture seule */}
+          <div style={{ padding: '12px 16px', background: '#f0f9f4', borderRadius: '10px', fontSize: '13px', color: '#05aa65', marginBottom: '16px' }}>
+            La quantité en stock (<strong>{product?.quantite} unités</strong>) ne peut pas être modifiée ici.
+            Utilisez le réapprovisionnement ou les transactions pour ajuster le stock.
+          </div>
+
           {error && (
             <div className="form-error">
               <LuCircleAlert size={20} />
@@ -347,73 +271,60 @@ export default function UpdateProductScreen() {
             </div>
           )}
 
-          {/* Actions */}
           <div className="form-actions">
-            <button
-              type="button"
-              className="cancel-btn"
-              onClick={() => navigate(`/stock/${id}`)}
-              disabled={submitting}
-            >
+            <button type="button" className="cancel-btn" onClick={() => navigate(`/stock/${id}`)} disabled={submitting}>
               Annuler
             </button>
-            <button
-              type="submit"
-              className="submit-btn"
-              disabled={submitting || !isFormValid()}
-            >
+            <button type="submit" className="submit-btn" disabled={submitting || !isFormValid()}>
               {submitting ? (
-                <>
-                  <LuLoader className="spinning" size={18} />
-                  Enregistrement...
-                </>
+                <><LuLoader className="spinning" size={18} /> Enregistrement...</>
               ) : (
-                <>
-                  <LuSave size={18} />
-                  Enregistrer les modifications
-                </>
+                <><LuSave size={18} /> Enregistrer les modifications</>
               )}
             </button>
           </div>
         </form>
 
-        {/* Informations supplémentaires */}
+        {/* Sidebar */}
         <div className="info-sidebar">
           <div className="info-card">
-            <h3>À propos de la modification</h3>
+            <h3>Règles de modification</h3>
             <ul>
-              <li>✓ Les champs marqués d'un * sont obligatoires</li>
-              <li>✓ Les quantités doivent être des nombres positifs</li>
+              <li>✓ Nom, catégorie, finalité, paiement modifiables</li>
               <li>✓ Les prix sont en Ariary (Ar)</li>
-              <li>✓ La modification est irréversible</li>
+              <li>✓ La quantité se gère via les transactions</li>
+              <li>✓ Le numéro de produit ne peut pas être changé</li>
             </ul>
           </div>
 
           <div className="stats-card">
             <h3>Statistiques</h3>
             <div className="stat-item">
+              <span className="stat-label">Quantité en stock</span>
+              <span className="stat-value">{product?.quantite?.toLocaleString()} unités</span>
+            </div>
+            <div className="stat-item">
               <span className="stat-label">Valeur du stock</span>
               <span className="stat-value">
-                {(Number(formData.quantite) * Number(formData.prixAchat) || 0).toLocaleString()} Ar
+                {((product?.quantite || 0) * (Number(formData.prix) || 0)).toLocaleString()} Ar
               </span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Marge unitaire</span>
-              <span className="stat-value">
-                {((Number(formData.prixVente) - Number(formData.prixAchat)) || 0).toLocaleString()} Ar
+              <span className="stat-value" style={{ color: margeUnitaire >= 0 ? '#05aa65' : '#e74c3c' }}>
+                {margeUnitaire.toLocaleString()} Ar
               </span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Marge totale</span>
-              <span className="stat-value">
-                {((Number(formData.prixVente) - Number(formData.prixAchat)) * Number(formData.quantite) || 0).toLocaleString()} Ar
+              <span className="stat-value" style={{ color: margeUnitaire >= 0 ? '#05aa65' : '#e74c3c' }}>
+                {(margeUnitaire * (product?.quantite || 0)).toLocaleString()} Ar
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal de succès */}
       {success && (
         <div className="success-modal">
           <div className="success-content">

@@ -1,12 +1,11 @@
-// src/pages/stock/reapprovisionner.tsx - Version corrigée
-
+// src/pages/stock/reapprovisionner.tsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  LuPackage, 
-  LuArrowLeft, 
-  LuTruck, 
+import {
+  LuPackage,
+  LuArrowLeft,
+  LuTruck,
   LuDollarSign,
   LuRefreshCw,
   LuPlus,
@@ -14,10 +13,14 @@ import {
   LuCircleCheck,
   LuCircleAlert,
   LuInfo,
-  LuShoppingCart
+  LuShoppingCart,
+  LuWarehouse,
 } from 'react-icons/lu';
 import BASE_URL from '../../config/ApiConfig';
 import './approvisionnement.css';
+import type { ProduitById } from '../../models';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Product {
   id: number;
@@ -28,50 +31,73 @@ interface Product {
   prixAchat: number;
   prixVente: number;
   idEntreprise: number;
+  Stock?: StockLine[];
 }
+
+interface StockLine {
+  id: number;           // id de la ligne Stock
+  quantite: number;
+  transport: number;
+  dateDepot: string;
+  entrepot: {
+    id: number;
+    ville: string;
+    zone: string;
+  };
+}
+
+interface Entrepot {
+  id: number;
+  ville: string;
+  zone: string;
+}
+
+// ─── Composant ────────────────────────────────────────────────────────────────
 
 export default function ReapprovisionnerScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { token, user } = useAuth();
-  
-  const [product, setProduct] = useState<Product | null>(null);
+
+  const [product, setProduct] = useState<ProduitById | null>(null);
+  const [entrepots, setEntrepots] = useState<Entrepot[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [quantite, setQuantite] = useState<number>(1); // Initialisation explicite
-  const [prixAchat, setPrixAchat] = useState<number>(0);
-  const [transport, setTransport] = useState<number>(0);
-  const [fournisseur, setFournisseur] = useState('');
-  const [note, setNote] = useState('');
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
+  // Champs du formulaire
+  const [quantite, setQuantite] = useState<number>(1);
+  const [prixAchat, setPrixAchat] = useState<number>(0);
+  const [transport, setTransport] = useState<number>(0);
+  const [idEntrepot, setIdEntrepot] = useState<number | null>(null);
+  const [method, setMethod] = useState<'CASH' | 'CREDIT' | 'BANK' | 'MOBILE_MONEY' | 'CHECK'>('CASH');
+
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPERADMIN';
 
+  // ── Chargement initial ──
   useEffect(() => {
-    fetchProduct();
+    if (token && id) {
+      fetchProduct();
+      fetchEntrepots();
+    }
   }, [id, token]);
 
   const fetchProduct = async () => {
-    if (!token || !id) return;
-    
     try {
       setLoading(true);
-      const response = await fetch(`${BASE_URL}/stock/produit/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+      const res = await fetch(`${BASE_URL}/stock/produit/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors du chargement du produit');
-      }
-
-      const data = await response.json();
+      if (!res.ok) throw new Error('Erreur lors du chargement du produit');
+      const data: ProduitById = await res.json();
       setProduct(data);
       setPrixAchat(data.prixAchat);
+      // Présélectionner le premier entrepôt connu du produit
+      if (data.Stock && data.Stock.length > 0) {
+        setIdEntrepot(data.Stock[0].entrepot.id);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
@@ -79,66 +105,61 @@ export default function ReapprovisionnerScreen() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const fetchEntrepots = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/stock/entrepot`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data: Entrepot[] = await res.json();
+      setEntrepots(data);
+      if (data.length > 0 && idEntrepot === null) {
+        setIdEntrepot(data[0].id);
+      }
+    } catch {
+      // Non bloquant : l'utilisateur pourra quand même saisir
+    }
+  };
+
+  // ── Soumission ──
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!token || !id || !product) return;
-    
-    if (quantite <= 0) {
-      setError('La quantité doit être supérieure à 0');
-      return;
-    }
-
-    if (prixAchat <= 0) {
-      setError('Le prix d\'achat doit être supérieur à 0');
-      return;
-    }
-
+    if (quantite <= 0) { setError('La quantité doit être supérieure à 0'); return; }
+    if (prixAchat <= 0) { setError("Le prix d'achat doit être supérieur à 0"); return; }
+    if (!idEntrepot) { setError("Veuillez sélectionner un entrepôt"); return; }
+    setError(null);
     setShowConfirmation(true);
   };
 
   const confirmReappro = async () => {
-    if (!token || !id || !product) return;
-
+    if (!token || !id || !product || !idEntrepot) return;
     setSubmitting(true);
     setError(null);
 
     try {
-      // Calcul du montant total pour l'historique
-      const montantTotal = (prixAchat * quantite) + transport;
-      
-      // Préparer les données pour la mise à jour
-      const updateData: any = {
-        quantite: product.quantite + quantite // Nouvelle quantité = ancienne + ajoutée
-      };
-      
-      // Si l'utilisateur est admin et que le prix d'achat a changé, on met à jour
-      if (isAdmin && prixAchat !== product.prixAchat) {
-        updateData.prixAchat = prixAchat;
-      }
-
-      // Appel API pour mettre à jour le produit
-      const response = await fetch(`${BASE_URL}/stock/produit/${id}`, {
-        method: 'PATCH',
+      // ✅ Appel correct : POST /stock/produit/:id/reapprovisionner
+      const res = await fetch(`${BASE_URL}/stock/produit/${id}/reapprovisionner`, {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify({
+          idEntrepot,
+          quantite,
+          prixAchat,
+          transport,
+          method,
+        }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de l\'approvisionnement');
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Erreur lors de l'approvisionnement");
       }
 
       setSuccess(true);
-      
-      // Rediriger après 2 secondes
-      setTimeout(() => {
-        navigate(`/stock/${id}`);
-      }, 2000);
-      
+      setTimeout(() => navigate(`/stock/${id}`), 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       setShowConfirmation(false);
@@ -147,117 +168,79 @@ export default function ReapprovisionnerScreen() {
     }
   };
 
-  const incrementQuantite = () => {
-    setQuantite(prev => {
-      const newValue = prev + 1;
-      console.log('Nouvelle quantité:', newValue); // Debug
-      return newValue;
-    });
-  };
-
-  const decrementQuantite = () => {
-    setQuantite(prev => {
-      if (prev > 1) {
-        const newValue = prev - 1;
-        console.log('Nouvelle quantité:', newValue); // Debug
-        return newValue;
-      }
-      return prev;
-    });
-  };
-
+  // ── Helpers quantité ──
+  const incrementQuantite = () => setQuantite(prev => prev + 1);
+  const decrementQuantite = () => setQuantite(prev => (prev > 1 ? prev - 1 : 1));
   const handleQuantiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    console.log('Valeur brute:', value); // Debug
-    
-    if (value === '') {
-      setQuantite(1);
-      return;
-    }
-    
-    const numValue = parseInt(value);
-    if (!isNaN(numValue) && numValue >= 1) {
-      setQuantite(numValue);
-      console.log('Quantité définie à:', numValue); // Debug
-    } else if (numValue < 1) {
-      setQuantite(1);
-    }
+    const v = parseInt(e.target.value);
+    setQuantite(!isNaN(v) && v >= 1 ? v : 1);
   };
 
-  const montantTotal = (prixAchat * quantite) + transport;
+  const montantTotal = prixAchat * quantite + transport;
   const nouvelleQuantite = (product?.quantite || 0) + quantite;
 
-  // Debug: afficher la quantité actuelle
-  console.log('Quantité actuelle dans le state:', quantite);
+  const PAYMENT_OPTIONS: { value: typeof method; label: string }[] = [
+    { value: 'CASH', label: 'Cash' },
+    { value: 'CREDIT', label: 'Crédit' },
+    { value: 'BANK', label: 'Virement' },
+    { value: 'MOBILE_MONEY', label: 'Mobile Money' },
+    { value: 'CHECK', label: 'Chèque' },
+  ];
 
-  if (loading) {
-    return (
-      <div className="reappro-loading">
-        <div className="spinner" />
-        <p>Chargement du produit...</p>
-      </div>
-    );
-  }
+  // ── États de chargement / erreur ──
+  if (loading) return (
+    <div className="reappro-loading">
+      <div className="spinner" />
+      <p>Chargement du produit...</p>
+    </div>
+  );
 
-  if (error && !product) {
-    return (
-      <div className="reappro-error">
-        <LuCircleAlert size={48} />
-        <h2>Erreur</h2>
-        <p>{error}</p>
-        <button onClick={() => navigate('/stock')} className="back-button">
-          Retour à la liste
-        </button>
-      </div>
-    );
-  }
+  if (error && !product) return (
+    <div className="reappro-error">
+      <LuCircleAlert size={48} />
+      <h2>Erreur</h2>
+      <p>{error}</p>
+      <button onClick={() => navigate('/stock')} className="back-button">Retour à la liste</button>
+    </div>
+  );
 
-  if (success) {
-    return (
-      <div className="reappro-success">
-        <LuCircleCheck size={64} color="#05aa65" />
-        <h2>Approvisionnement réussi !</h2>
-        <p>
-          {quantite} unités de <strong>{product?.nom}</strong> ont été ajoutées au stock.
-        </p>
-        <div className="success-details">
-          <div className="detail-item">
-            <span>Nouveau stock:</span>
-            <strong>{nouvelleQuantite} unités</strong>
-          </div>
-          <div className="detail-item">
-            <span>Montant total:</span>
-            <strong>{montantTotal.toLocaleString()} Ar</strong>
-          </div>
-          {prixAchat !== product?.prixAchat && isAdmin && (
-            <div className="detail-item warning">
-              <span>Prix d'achat mis à jour:</span>
-              <strong>{prixAchat.toLocaleString()} Ar</strong>
-            </div>
-          )}
+  if (success) return (
+    <div className="reappro-success">
+      <LuCircleCheck size={64} color="#05aa65" />
+      <h2>Approvisionnement réussi !</h2>
+      <p>{quantite} unités de <strong>{product?.nom}</strong> ont été ajoutées au stock.</p>
+      <div className="success-details">
+        <div className="detail-item">
+          <span>Nouveau stock :</span>
+          <strong>{nouvelleQuantite} unités</strong>
         </div>
-        <button onClick={() => navigate(`/stock/${id}`)} className="success-button">
-          Voir le produit
-        </button>
+        <div className="detail-item">
+          <span>Montant total :</span>
+          <strong>{montantTotal.toLocaleString()} Ar</strong>
+        </div>
+        <div className="detail-item">
+          <span>Entrepôt :</span>
+          <strong>{entrepots.find(e => e.id === idEntrepot)?.ville} — {entrepots.find(e => e.id === idEntrepot)?.zone}</strong>
+        </div>
       </div>
-    );
-  }
+      <button onClick={() => navigate(`/stock/${id}`)} className="success-button">Voir le produit</button>
+    </div>
+  );
 
   return (
     <div className="reappro-container">
       {/* Header */}
       <div className="reappro-header">
         <button className="back-button" onClick={() => navigate(`/stock/${id}`)}>
-          <LuArrowLeft size={20} />
-          Retour
+          <LuArrowLeft size={20} /> Retour
         </button>
         <div className="header-title">
           <h1>Réapprovisionnement</h1>
-          <p className="product-name">{product?.nom} - Réf: {product?.numero}</p>
+          <p className="product-name">{product?.nom} — Réf : {product?.numero}</p>
         </div>
       </div>
 
-      {/* Informations produit */}
+      {/* Infos produit */}
       <div className="product-info-card">
         <div className="info-item">
           <LuPackage className="info-icon" />
@@ -286,29 +269,50 @@ export default function ReapprovisionnerScreen() {
       <form onSubmit={handleSubmit} className="reappro-form">
         {error && (
           <div className="error-message">
-            <LuCircleAlert size={20} />
-            {error}
+            <LuCircleAlert size={20} /> {error}
           </div>
         )}
 
-        {/* Quantité à approvisionner - VERSION CORRIGÉE */}
+        {/* Entrepôt de destination */}
+        <div className="form-group">
+          <label htmlFor="entrepot">
+            <LuWarehouse size={16} /> Entrepôt de destination <span className="required">*</span>
+          </label>
+          {entrepots.length > 0 ? (
+            <select
+              id="entrepot"
+              value={idEntrepot ?? ''}
+              onChange={e => setIdEntrepot(Number(e.target.value))}
+              required
+              style={{ width: '100%', padding: '12px 16px', border: '2px solid #e0e0e0', borderRadius: '12px', fontSize: '14px' }}
+            >
+              <option value="" disabled>Sélectionner un entrepôt</option>
+              {entrepots.map(e => (
+                <option key={e.id} value={e.id}>{e.ville} — {e.zone}</option>
+              ))}
+            </select>
+          ) : (
+            <div className="info-text warning">
+              <LuInfo size={14} /> Aucun entrepôt disponible. Créez-en un depuis la gestion des entrepôts.
+            </div>
+          )}
+          <small className="field-hint">
+            La quantité sera ajoutée à la ligne de stock de cet entrepôt.
+          </small>
+        </div>
+
+        {/* Quantité */}
         <div className="form-group">
           <label htmlFor="quantite">
             Quantité à approvisionner <span className="required">*</span>
           </label>
           <div className="quantity-input">
-            <button 
-              type="button" 
-              onClick={decrementQuantite}
-              className="quantity-btn"
-              disabled={quantite <= 1}
-            >
+            <button type="button" onClick={decrementQuantite} className="quantity-btn" disabled={quantite <= 1}>
               <LuMinus />
             </button>
             <input
               type="number"
               id="quantite"
-              name="quantite"
               value={quantite}
               onChange={handleQuantiteChange}
               min="1"
@@ -316,21 +320,11 @@ export default function ReapprovisionnerScreen() {
               required
               className="quantity-field"
             />
-            <button 
-              type="button" 
-              onClick={incrementQuantite}
-              className="quantity-btn"
-            >
+            <button type="button" onClick={incrementQuantite} className="quantity-btn">
               <LuPlus />
             </button>
           </div>
-          <small className="field-hint">
-            La quantité sera ajoutée au stock actuel
-          </small>
-          {/* Affichage de debug - à retirer après correction */}
-          <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
-            Valeur actuelle: {quantite} unité{quantite > 1 ? 's' : ''}
-          </div>
+          <small className="field-hint">La quantité sera ajoutée au stock actuel.</small>
         </div>
 
         {/* Prix d'achat */}
@@ -344,7 +338,7 @@ export default function ReapprovisionnerScreen() {
               type="number"
               id="prixAchat"
               value={prixAchat}
-              onChange={(e) => setPrixAchat(Math.max(0, parseInt(e.target.value) || 0))}
+              onChange={e => setPrixAchat(Math.max(0, parseInt(e.target.value) || 0))}
               min="0"
               required
               step="100"
@@ -352,13 +346,12 @@ export default function ReapprovisionnerScreen() {
           </div>
           {isAdmin && prixAchat !== product?.prixAchat && (
             <div className="info-text">
-              <LuInfo size={14} />
-              ⚠️ Le prix d'achat sera mis à jour pour ce produit
+              <LuInfo size={14} /> Le nouveau prix d'achat sera utilisé pour cette transaction.
             </div>
           )}
         </div>
 
-        {/* Frais de transport */}
+        {/* Transport */}
         <div className="form-group">
           <label htmlFor="transport">Frais de transport (Ar)</label>
           <div className="input-wrapper">
@@ -367,75 +360,79 @@ export default function ReapprovisionnerScreen() {
               type="number"
               id="transport"
               value={transport}
-              onChange={(e) => setTransport(Math.max(0, parseInt(e.target.value) || 0))}
+              onChange={e => setTransport(Math.max(0, parseInt(e.target.value) || 0))}
               min="0"
               step="100"
             />
           </div>
-          <small className="field-hint">
-            Les frais de transport seront ajoutés au coût total
-          </small>
+          <small className="field-hint">Frais de transport unitaires pour cette livraison.</small>
         </div>
 
-        {/* Fournisseur */}
+        {/* Mode de paiement */}
         <div className="form-group">
-          <label htmlFor="fournisseur">Fournisseur</label>
-          <input
-            type="text"
-            id="fournisseur"
-            value={fournisseur}
-            onChange={(e) => setFournisseur(e.target.value)}
-            placeholder="Nom du fournisseur (optionnel)"
-          />
-        </div>
-
-        {/* Note */}
-        <div className="form-group">
-          <label htmlFor="note">Note</label>
-          <textarea
-            id="note"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Informations supplémentaires (optionnel)"
-            rows={3}
-          />
+          <label>Mode de paiement <span className="required">*</span></label>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {PAYMENT_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setMethod(opt.value)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: `2px solid ${method === opt.value ? '#05aa65' : '#e0e0e0'}`,
+                  background: method === opt.value ? '#05aa65' : 'white',
+                  color: method === opt.value ? 'white' : '#2c3e50',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {method !== 'CASH' && (
+            <div className="info-text warning">
+              <LuInfo size={14} /> Paiement {method} : le compte ne sera pas débité immédiatement.
+            </div>
+          )}
         </div>
 
         {/* Résumé */}
         <div className="summary-card">
-          <h3>Résumé de l'approvisionnement</h3>
+          <h3>Résumé</h3>
           <div className="summary-row">
-            <span>Stock actuel:</span>
+            <span>Stock actuel :</span>
             <strong>{product?.quantite.toLocaleString()} unités</strong>
           </div>
           <div className="summary-row highlight">
-            <span>Quantité à ajouter:</span>
+            <span>Quantité à ajouter :</span>
             <strong className="highlight-value">+ {quantite} unités</strong>
           </div>
           <div className="summary-divider" />
           <div className="summary-row total-new">
-            <span>Nouveau stock:</span>
+            <span>Nouveau stock :</span>
             <strong>{nouvelleQuantite.toLocaleString()} unités</strong>
           </div>
-          
           <div className="summary-subsection">
             <h4>Détail financier</h4>
             <div className="summary-row">
-              <span>Prix unitaire:</span>
+              <span>Prix unitaire :</span>
               <strong>{prixAchat.toLocaleString()} Ar</strong>
             </div>
             <div className="summary-row">
-              <span>Sous-total:</span>
+              <span>Sous-total :</span>
               <strong>{(prixAchat * quantite).toLocaleString()} Ar</strong>
             </div>
             {transport > 0 && (
               <div className="summary-row">
-                <span>Transport:</span>
+                <span>Transport :</span>
                 <strong>{transport.toLocaleString()} Ar</strong>
               </div>
             )}
             <div className="summary-row total">
-              <span>Total TTC:</span>
+              <span>Total :</span>
               <strong>{montantTotal.toLocaleString()} Ar</strong>
             </div>
           </div>
@@ -443,28 +440,14 @@ export default function ReapprovisionnerScreen() {
 
         {/* Actions */}
         <div className="form-actions">
-          <button
-            type="button"
-            className="cancel-btn"
-            onClick={() => navigate(`/stock/${id}`)}
-          >
+          <button type="button" className="cancel-btn" onClick={() => navigate(`/stock/${id}`)}>
             Annuler
           </button>
-          <button
-            type="submit"
-            className="submit-btn"
-            disabled={submitting}
-          >
+          <button type="submit" className="submit-btn" disabled={submitting || !idEntrepot}>
             {submitting ? (
-              <>
-                <LuRefreshCw className="spinning" />
-                Traitement...
-              </>
+              <><LuRefreshCw className="spinning" /> Traitement...</>
             ) : (
-              <>
-                <LuCircleCheck />
-                Valider l'approvisionnement
-              </>
+              <><LuCircleCheck /> Valider l'approvisionnement</>
             )}
           </button>
         </div>
@@ -477,45 +460,24 @@ export default function ReapprovisionnerScreen() {
             <LuCircleAlert size={48} color="#05aa65" />
             <h2>Confirmer l'approvisionnement</h2>
             <div className="confirmation-details">
-              <div className="confirmation-item">
-                <span>Produit:</span>
-                <strong>{product?.nom}</strong>
-              </div>
-              <div className="confirmation-item">
-                <span>Quantité:</span>
-                <strong>{quantite} unités</strong>
-              </div>
-              <div className="confirmation-item">
-                <span>Stock actuel:</span>
-                <strong>{product?.quantite} unités</strong>
-              </div>
-              <div className="confirmation-item">
-                <span>Nouveau stock:</span>
-                <strong>{nouvelleQuantite} unités</strong>
-              </div>
-              <div className="confirmation-item">
-                <span>Montant total:</span>
-                <strong>{montantTotal.toLocaleString()} Ar</strong>
-              </div>
-              {fournisseur && (
-                <div className="confirmation-item">
-                  <span>Fournisseur:</span>
-                  <strong>{fournisseur}</strong>
+              {[
+                ['Produit', product?.nom],
+                ['Entrepôt', entrepots.find(e => e.id === idEntrepot) ? `${entrepots.find(e => e.id === idEntrepot)!.ville} — ${entrepots.find(e => e.id === idEntrepot)!.zone}` : '—'],
+                ['Quantité', `${quantite} unités`],
+                ['Stock actuel', `${product?.quantite} unités`],
+                ['Nouveau stock', `${nouvelleQuantite} unités`],
+                ['Montant total', `${montantTotal.toLocaleString()} Ar`],
+                ['Paiement', method],
+              ].map(([label, val]) => (
+                <div key={label} className="confirmation-item">
+                  <span>{label} :</span>
+                  <strong>{val}</strong>
                 </div>
-              )}
+              ))}
             </div>
             <div className="modal-actions">
-              <button 
-                className="cancel-modal-btn"
-                onClick={() => setShowConfirmation(false)}
-              >
-                Annuler
-              </button>
-              <button 
-                className="confirm-modal-btn"
-                onClick={confirmReappro}
-                disabled={submitting}
-              >
+              <button className="cancel-modal-btn" onClick={() => setShowConfirmation(false)}>Annuler</button>
+              <button className="confirm-modal-btn" onClick={confirmReappro} disabled={submitting}>
                 {submitting ? 'Traitement...' : 'Confirmer'}
               </button>
             </div>
