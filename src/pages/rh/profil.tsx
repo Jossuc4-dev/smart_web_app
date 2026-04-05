@@ -1,527 +1,1330 @@
-// src/pages/rh/staff/ProfileStaff.tsx
-import { useEffect, useState, type JSX } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import BASE_URL from '../../config/ApiConfig';
+// src/pages/profile/index.tsx — Smart Business · Page Profil
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  FaArrowLeft, FaEdit, FaCheck, FaTimes, FaUser,
-  FaEnvelope, FaPhone, FaIdCard, FaCalendarAlt,
-  FaBriefcase, FaHistory, FaShieldAlt, FaUmbrellaBeach
-} from 'react-icons/fa';
-import { MdWork, MdSchedule } from 'react-icons/md';
+  LuBadgeCheck,
+  LuBanknote,
+  LuCalendarDays,
+  LuChevronLeft,
+  LuChevronRight,
+  LuCircleAlert,
+  LuKeyRound,
+  LuLoader,
+  LuLock,
+  LuLogOut,
+  LuMail,
+  LuPencil,
+  LuPhone,
+  LuPlus,
+  LuRefreshCw,
+  LuShield,
+  LuShieldCheck,
+  LuShieldOff,
+  LuSmartphone,
+  LuToggleLeft,
+  LuToggleRight,
+  LuUser,
+  LuUserX,
+  LuX,
+  LuCheck,
+} from "react-icons/lu";
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Palette Smart Business ────────────────────────────────────────────────────
+const SB = {
+  blue:       "#2E86AB",
+  cyan:       "#17A8B8",
+  teal:       "#1B8A5A",
+  red:        "#E05A5A",
+  amber:      "#D97706",
+  text1:      "#1a2940",
+  text2:      "#3d5a73",
+  text3:      "#7a95aa",
+  bg:         "#f4f7fa",
+  surface:    "#ffffff",
+  surfaceAlt: "#eef3f8",
+  border:     "rgba(46,134,171,0.14)",
+};
 
-interface Profession {
-  id: number;
-  poste: string;
-}
-
-interface Activity {
-  id: number;
-  date: string;
-  action: { type: string; data?: any } | string;
-}
-
+// ── Types ─────────────────────────────────────────────────────────────────────
 interface UserProfile {
   id: number;
   nom: string;
   email: string;
-  telephone: string;
+  telephone?: string;
   cin?: string;
-  sexe?: 'HOMME' | 'FEMME';
-  situation?: 'MARIE' | 'CELIBATAIRE';
+  sexe?: "HOMME" | "FEMME";
+  situation?: "MARIE" | "CELIBATAIRE";
   enfants?: number;
-  role: 'ADMIN' | 'USER';
   dateEmbauche?: string;
+  role: string;
+  salaire: number;
   boolcnaps?: boolean;
   numeroCnaps?: string;
-  actif: boolean;
-  salaire:number;
-  profession: Profession;
-  activities: Activity[];
+  profession: { poste: string; idEntreprise: number };
+  cnaps?: {
+    montantPersonnel?: number;
+    montantEntreprise?: number;
+  } | null;
+  conges?: Array<{
+    id: number;
+    dateDebut: string;
+    dateFin: string;
+    type?: string;
+    valide?: boolean;
+  }>;
 }
 
-type TabType = 'infos' | 'conges' | 'cnaps' | 'activites';
+type TabId = "profil" | "cnaps" | "salaire" | "conges" | "securite";
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Hook API simplifié ────────────────────────────────────────────────────────
+function useApi() {
+  const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+  const token = localStorage.getItem("token") || "";
 
-const initials = (nom: string) =>
-  nom.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-
-const activityIcon: Record<string, string> = {
-  vente: '🛒', Approvisionnement: '🚚', congé: '🏖️',
-  Validation: '✅', Annulation: '❌',
-};
-const getIcon = (type: string) =>
-  Object.entries(activityIcon).find(([k]) => type.includes(k))?.[1] ?? '✏️';
-
-// ── Composant principal ───────────────────────────────────────────────────────
-
-export default function ProfileStaff() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { token } = useAuth();
-
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<TabType>('infos');
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState<Partial<UserProfile>>({});
-  const [error, setError] = useState('');
-
-  // ── Fetch ──────────────────────────────────────────────────────────────────
-
-  const loadProfile = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${BASE_URL}/rh/staff/profile/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error();
-      const data: UserProfile = await res.json();
-      data.activities = data.activities.map(act => ({
-        ...act,
-        action: typeof act.action === 'string' ? JSON.parse(act.action) : act.action,
-      })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setUser(data);
-      setForm(data);
-    } catch {
-      setError('Impossible de charger le profil.');
-    } finally {
-      setLoading(false);
-    }
+  const get = async(path: string) => {
+    const res = await fetch(`${baseUrl}/${path}`, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
   };
 
-  useEffect(() => { if (id) loadProfile(); }, [id]);
-
-  // ── Save ───────────────────────────────────────────────────────────────────
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const res = await fetch(`${BASE_URL}/rh/staff/${id}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) throw new Error();
-      const updated = await res.json();
-      setUser({ ...user!, ...updated });
-      setEditing(false);
-    } catch {
-      setError('Erreur lors de la mise à jour.');
-    } finally {
-      setSaving(false);
-    }
+  const put = async(path: string, body: unknown)=> {
+    const res = await fetch(`${baseUrl}/${path}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
   };
 
-  // ── Loading / Error ────────────────────────────────────────────────────────
+  const post = async(path: string, body: unknown)=> {
+    const res = await fetch(`${baseUrl}/${path}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  };
 
-  if (loading) return (
-    <div style={s.center}>
-      <div style={s.spinner} />
-      <p style={{ color: '#04957d', marginTop: 16, fontFamily: 'DM Sans, sans-serif' }}>
-        Chargement du profil...
-      </p>
-    </div>
-  );
+  return { get, put, post };
+}
 
-  if (error || !user) return (
-    <div style={s.center}>
-      <span style={{ fontSize: 48 }}>⚠️</span>
-      <p style={{ color: '#ef4444', marginTop: 12, fontFamily: 'DM Sans, sans-serif' }}>
-        {error || 'Utilisateur introuvable'}
-      </p>
-    </div>
-  );
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmtAr(n: number) {
+  return n.toLocaleString("fr-FR") + " Ar";
+}
 
-  const tabs: { key: TabType; label: string; icon: JSX.Element }[] = [
-    { key: 'infos',    label: 'Infos',      icon: <FaUser size={13} /> },
-    { key: 'conges',   label: 'Congés',     icon: <FaUmbrellaBeach size={13} /> },
-    { key: 'cnaps',    label: 'CNAPS',      icon: <FaShieldAlt size={13} /> },
-    { key: 'activites',label: 'Activités',  icon: <FaHistory size={13} /> },
-  ];
+function fmtDate(d: string | Date) {
+  return new Date(d).toLocaleDateString("fr-FR", {
+    day: "2-digit", month: "short", year: "numeric",
+  });
+}
 
+function diffDays(a: string | Date, b: string | Date) {
+  const ms = new Date(b).getTime() - new Date(a).getTime();
+  return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+}
+
+// ── Composant Badge ───────────────────────────────────────────────────────────
+function Badge({ label, color, bg }: { label: string; color: string; bg: string }) {
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #f0f4f3; }
-        .profile-tab { transition: all .2s ease; cursor: pointer; }
-        .profile-tab:hover { opacity: .85; }
-        .profile-field input, .profile-field select {
-          width: 100%; padding: 10px 14px; border: 1.5px solid #e0e0e0;
-          border-radius: 10px; font-family: 'DM Sans', sans-serif;
-          font-size: 14px; color: #1a1a2e; outline: none;
-          transition: border-color .2s;
-        }
-        .profile-field input:focus, .profile-field select:focus {
-          border-color: #04957d;
-        }
-        .profile-field input:disabled, .profile-field select:disabled {
-          background: #f9f9f9; color: #666; cursor: default;
-        }
-        .act-card { transition: transform .15s; }
-        .act-card:hover { transform: translateX(4px); }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .fade-up { animation: fadeUp .35s ease forwards; }
-      `}</style>
-
-      <div style={{ fontFamily: 'DM Sans, sans-serif', minHeight: '100vh', background: '#f0f4f3' }}>
-
-        {/* ── HEADER ─────────────────────────────────────────────────── */}
-        <div style={s.header}>
-          {/* Motif déco */}
-          <div style={s.headerDeco1} />
-          <div style={s.headerDeco2} />
-
-          <button style={s.backBtn} onClick={() => navigate(-1)}>
-            <FaArrowLeft size={16} color="#fff" />
-          </button>
-
-          {/* Avatar */}
-          <div style={s.avatarRing}>
-            <div style={s.avatar}>
-              <span style={s.avatarText}>{initials(user.nom)}</span>
-            </div>
-          </div>
-
-          <h1 style={s.headerName}>{user.nom}</h1>
-          <p style={s.headerRole}>{user.profession.poste}</p>
-
-          <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
-            <span style={{
-              ...s.badge,
-              background: user.actif ? 'rgba(255,255,255,0.2)' : 'rgba(239,68,68,0.3)',
-            }}>
-              {user.actif ? '● Actif' : '● Inactif'}
-            </span>
-            <span style={s.badge}>{user.role}</span>
-          </div>
-
-          {/* Bouton modifier */}
-          {!editing ? (
-            <button style={s.editBtn} onClick={() => setEditing(true)}>
-              <FaEdit size={14} />
-              <span>Modifier</span>
-            </button>
-          ) : (
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button style={{ ...s.editBtn, background: 'rgba(255,255,255,0.25)' }}
-                onClick={() => { setEditing(false); setForm(user); }}>
-                <FaTimes size={14} /><span>Annuler</span>
-              </button>
-              <button style={{ ...s.editBtn, background: '#fff', color: '#04957d' }}
-                onClick={handleSave} disabled={saving}>
-                {saving ? <div style={{ ...s.spinner, width: 14, height: 14, borderWidth: 2 }} /> : <FaCheck size={14} />}
-                <span>{saving ? 'Enregistrement...' : 'Enregistrer'}</span>
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* ── ONGLETS ─────────────────────────────────────────────────── */}
-        <div style={s.tabBar}>
-          {tabs.map(t => (
-            <button
-              key={t.key}
-              className="profile-tab"
-              style={{ ...s.tabBtn, ...(tab === t.key ? s.tabActive : {}) }}
-              onClick={() => setTab(t.key)}
-            >
-              {t.icon}
-              <span>{t.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* ── CONTENU ─────────────────────────────────────────────────── */}
-        <div style={s.content} className="fade-up">
-
-          {/* ── INFOS ── */}
-          {tab === 'infos' && (
-            <div style={s.card}>
-              <h3 style={s.cardTitle}><FaUser size={15} color="#04957d" /> Informations personnelles</h3>
-              <div style={s.grid2}>
-                <Field icon={<FaUser />}        label="Nom complet"     field="nom"         form={form} setForm={setForm} editing={editing} />
-                <Field icon={<FaEnvelope />}    label="Email"           field="email"       form={form} setForm={setForm} editing={editing} type="email" />
-                <Field icon={<FaPhone />}       label="Téléphone"       field="telephone"   form={form} setForm={setForm} editing={editing} />
-                <Field icon={<FaIdCard />}      label="CIN"             field="cin"         form={form} setForm={setForm} editing={editing} />
-                <Field icon={<MdWork />}        label="Rôle"            field="role"        form={form} setForm={setForm} editing={editing}
-                  type="select" options={['ADMIN', 'USER']} />
-                <Field icon={<FaUser />}        label="Sexe"            field="sexe"        form={form} setForm={setForm} editing={editing}
-                  type="select" options={['HOMME', 'FEMME']} />
-                <Field icon={<FaUser />}        label="Situation"       field="situation"   form={form} setForm={setForm} editing={editing}
-                  type="select" options={['MARIE', 'CELIBATAIRE']} />
-                <Field icon={<FaUser />}        label="Enfants"         field="enfants"     form={form} setForm={setForm} editing={editing} type="number" />
-                <Field icon={<FaCalendarAlt />} label="Date d'embauche" field="dateEmbauche" form={form} setForm={setForm} editing={editing} type="date" />
-              </div>
-
-              <div style={{ marginTop: 24, padding: '16px 20px', background: '#f0faf7', borderRadius: 12, display: 'flex', gap: 24 }}>
-                <div>
-                  <p style={s.statLabel}>Poste</p>
-                  <p style={s.statValue}>{user.profession.poste}</p>
-                </div>
-                <div style={{ width: 1, background: '#d0ede7' }} />
-                <div>
-                  <p style={s.statLabel}>Salaire de base</p>
-                  <p style={s.statValue}>{user.salaire.toLocaleString()} Ar</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── CONGÉS ── */}
-          {tab === 'conges' && (
-            <div style={s.card}>
-              <h3 style={s.cardTitle}><FaUmbrellaBeach size={15} color="#04957d" /> Congés</h3>
-              <div style={s.emptyBox}>
-                <FaUmbrellaBeach size={40} color="#cce8e3" />
-                <p style={{ color: '#aaa', marginTop: 12, fontSize: 14 }}>
-                  Données de congés non disponibles pour le moment.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* ── CNAPS ── */}
-          {tab === 'cnaps' && (
-            <div style={s.card}>
-              <h3 style={s.cardTitle}><FaShieldAlt size={15} color="#04957d" /> CNAPS</h3>
-              {user.boolcnaps ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <InfoRow icon="🪪" label="Numéro CNAPS" value={user.numeroCnaps || 'Non renseigné'} />
-                  <InfoRow icon="✅" label="Enregistré CNAPS" value="Oui" color="#04957d" />
-                  {editing && (
-                    <div className="profile-field" style={{ marginTop: 8 }}>
-                      <label style={s.fieldLabel}>Numéro CNAPS</label>
-                      <input
-                        value={(form.numeroCnaps as string) ?? ''}
-                        onChange={e => setForm(f => ({ ...f, numeroCnaps: e.target.value }))}
-                      />
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div style={s.emptyBox}>
-                  <FaShieldAlt size={40} color="#cce8e3" />
-                  <p style={{ color: '#aaa', marginTop: 12, fontSize: 14 }}>
-                    Cet employé n'est pas enregistré sur CNAPS.
-                  </p>
-                  {editing && (
-                    <button
-                      style={{ ...s.editBtn, marginTop: 16, background: '#04957d' }}
-                      onClick={() => setForm(f => ({ ...f, boolcnaps: true }))}
-                    >
-                      <FaCheck size={13} /><span>Enregistrer sur CNAPS</span>
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── ACTIVITÉS ── */}
-          {tab === 'activites' && (
-            <div style={s.card}>
-              <h3 style={s.cardTitle}><FaHistory size={15} color="#04957d" /> Activité récente</h3>
-              {user.activities.length === 0 ? (
-                <div style={s.emptyBox}>
-                  <FaHistory size={40} color="#cce8e3" />
-                  <p style={{ color: '#aaa', marginTop: 12, fontSize: 14 }}>Aucune activité récente.</p>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {user.activities.map(act => {
-                    const action = act.action as { type: string; data?: any };
-                    const type = action.type || 'Action';
-                    const data = action.data
-                      ? typeof action.data === 'object' ? JSON.stringify(action.data) : action.data
-                      : null;
-                    return (
-                      <div key={act.id} className="act-card" style={s.actCard}>
-                        <div style={s.actIcon}>{getIcon(type)}</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={s.actType}>{type}</p>
-                          {data && <p style={s.actData}>{data}</p>}
-                        </div>
-                        <span style={s.actDate}>
-                          {new Date(act.date).toLocaleDateString('fr-FR', {
-                            day: 'numeric', month: 'short',
-                            hour: '2-digit', minute: '2-digit',
-                          })}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-        </div>
-      </div>
-    </>
+    <span style={{
+      display: "inline-flex", alignItems: "center",
+      padding: "3px 10px", borderRadius: 100,
+      fontSize: 11, fontWeight: 600, fontFamily: "'DM Mono', monospace",
+      color, background: bg, letterSpacing: "0.5px",
+    }}>
+      {label}
+    </span>
   );
 }
 
-// ── Sous-composants ───────────────────────────────────────────────────────────
+// ── Avatar ────────────────────────────────────────────────────────────────────
+function Avatar({ nom, size = 72 }: { nom: string; size?: number }) {
+  const initials = nom.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%",
+      background: `linear-gradient(135deg, ${SB.blue}, ${SB.cyan})`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      color: "#fff", fontFamily: "'DM Mono', monospace",
+      fontSize: size * 0.32, fontWeight: 600, flexShrink: 0,
+      boxShadow: "0 4px 16px rgba(46,134,171,0.30)",
+    }}>
+      {initials}
+    </div>
+  );
+}
 
-function Field({ icon, label, field, form, setForm, editing, type = 'text', options }: {
-  icon: JSX.Element; label: string; field: string;
-  form: any; setForm: any; editing: boolean;
-  type?: string; options?: string[];
+// ── Bouton principal ──────────────────────────────────────────────────────────
+function Btn({
+  children, onClick, variant = "primary", icon: Icon, disabled, small, danger,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: "primary" | "outline" | "ghost";
+  icon?: React.ElementType;
+  disabled?: boolean;
+  small?: boolean;
+  danger?: boolean;
 }) {
-  const value = form[field] ?? '';
+  const color  = danger ? SB.red : SB.cyan;
+  const styles: Record<string, React.CSSProperties> = {
+    primary: {
+      background: `linear-gradient(135deg, ${SB.blue}, ${SB.cyan})`,
+      color: "#fff", border: "none",
+      boxShadow: "0 2px 10px rgba(23,168,184,0.30)",
+    },
+    outline: {
+      background: "transparent",
+      color: danger ? SB.red : SB.blue,
+      border: `1px solid ${danger ? SB.red : SB.border}`,
+    },
+    ghost: {
+      background: danger ? "rgba(224,90,90,0.08)" : `rgba(46,134,171,0.07)`,
+      color: danger ? SB.red : SB.text2,
+      border: "none",
+    },
+  };
   return (
-    <div className="profile-field" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label style={s.fieldLabel}>
-        <span style={{ color: '#04957d', marginRight: 6 }}>{icon}</span>
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 7,
+        padding: small ? "7px 14px" : "10px 20px",
+        borderRadius: 12,
+        fontSize: small ? 12 : 13, fontWeight: 500,
+        fontFamily: "'DM Sans', sans-serif",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.55 : 1,
+        transition: "all 0.18s ease",
+        ...styles[variant],
+      }}
+    >
+      {Icon && <Icon size={small ? 13 : 15} />}
+      {children}
+    </button>
+  );
+}
+
+// ── Champ de formulaire ───────────────────────────────────────────────────────
+function Field({
+  label, value, onChange, type = "text", options,
+}: {
+  label: string;
+  value: string | number;
+  onChange: (v: string) => void;
+  type?: "text" | "email" | "date" | "number" | "select" | "password";
+  options?: { value: string; label: string }[];
+}) {
+  const base: React.CSSProperties = {
+    width: "100%", padding: "10px 14px",
+    borderRadius: 10, border: `1px solid ${SB.border}`,
+    background: SB.surfaceAlt, color: SB.text1,
+    fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+    outline: "none", transition: "border-color 0.15s",
+  };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <label style={{ fontSize: 11, fontWeight: 600, color: SB.text3,
+        fontFamily: "'DM Mono', monospace", textTransform: "uppercase", letterSpacing: "0.8px" }}>
         {label}
       </label>
-      {type === 'select' ? (
-        <select value={value} disabled={!editing}
-          onChange={e => setForm((f: any) => ({ ...f, [field]: e.target.value }))}>
-          <option value="">— Sélectionner —</option>
-          {options!.map(o => <option key={o} value={o}>{o}</option>)}
+      {type === "select" ? (
+        <select value={value} onChange={(e) => onChange(e.target.value)} style={base}>
+          {options?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       ) : (
         <input
           type={type}
-          value={type === 'date' && value ? value.split('T')[0] : value}
-          disabled={!editing}
-          onChange={e => setForm((f: any) => ({ ...f, [field]: e.target.value }))}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          style={base}
+          onFocus={(e) => { e.target.style.borderColor = SB.cyan; }}
+          onBlur={(e) => { e.target.style.borderColor = SB.border; }}
         />
       )}
     </div>
   );
 }
 
-function InfoRow({ icon, label, value, color }: { icon: string; label: string; value: string; color?: string }) {
+// ── InfoRow ───────────────────────────────────────────────────────────────────
+function InfoRow({ icon: Icon, label, value, accent = SB.blue }: {
+  icon: React.ElementType; label: string; value?: string | number | null; accent?: string;
+}) {
+  if (!value && value !== 0) return null;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0', borderBottom: '1px solid #f0f0f0' }}>
-      <span style={{ fontSize: 22 }}>{icon}</span>
-      <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 12, color: '#999', marginBottom: 2 }}>{label}</p>
-        <p style={{ fontSize: 16, fontWeight: 700, color: color || '#1a1a2e' }}>{value}</p>
+    <div style={{
+      display: "flex", alignItems: "center", gap: 14,
+      padding: "14px 0", borderBottom: `1px solid ${SB.border}`,
+    }}>
+      <div style={{
+        width: 36, height: 36, borderRadius: 10,
+        background: `${accent}12`, color: accent,
+        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+      }}>
+        <Icon size={17} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 11, color: SB.text3, fontFamily: "'DM Mono', monospace",
+          textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 2 }}>{label}</div>
+        <div style={{ fontSize: 14, color: SB.text1, fontWeight: 500 }}>{value}</div>
       </div>
     </div>
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// ── Card ──────────────────────────────────────────────────────────────────────
+function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{
+      background: SB.surface, border: `1px solid ${SB.border}`,
+      borderRadius: 20, padding: "24px 28px",
+      boxShadow: "0 1px 4px rgba(46,134,171,0.08)",
+      ...style,
+    }}>
+      {children}
+    </div>
+  );
+}
 
-const s: Record<string, React.CSSProperties> = {
-  center: {
-    display: 'flex', flexDirection: 'column', alignItems: 'center',
-    justifyContent: 'center', minHeight: '100vh',
-  },
-  spinner: {
-    width: 40, height: 40, borderRadius: '50%',
-    border: '3px solid #cce8e3', borderTopColor: '#04957d',
-    animation: 'spin 0.8s linear infinite',
-  },
-  header: {
-    background: 'linear-gradient(135deg, #04957d 0%, #037a68 100%)',
-    padding: '60px 24px 36px',
-    display: 'flex', flexDirection: 'column', alignItems: 'center',
-    position: 'relative', overflow: 'hidden',
-  },
-  headerDeco1: {
-    position: 'absolute', top: -60, right: -60,
-    width: 200, height: 200, borderRadius: '50%',
-    background: 'rgba(255,255,255,0.07)',
-  },
-  headerDeco2: {
-    position: 'absolute', bottom: -40, left: -40,
-    width: 160, height: 160, borderRadius: '50%',
-    background: 'rgba(255,255,255,0.05)',
-  },
-  backBtn: {
-    position: 'absolute', top: 20, left: 20,
-    background: 'rgba(0,0,0,0.2)', border: 'none', borderRadius: '50%',
-    width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer',
-  },
-  avatarRing: {
-    width: 108, height: 108, borderRadius: '50%',
-    background: 'rgba(255,255,255,0.25)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    marginBottom: 14,
-  },
-  avatar: {
-    width: 90, height: 90, borderRadius: '50%',
-    background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-  },
-  avatarText: { fontSize: 32, fontWeight: 800, color: '#04957d', fontFamily: 'Syne, sans-serif' },
-  headerName: { fontSize: 26, fontWeight: 800, color: '#fff', fontFamily: 'Syne, sans-serif', textAlign: 'center' },
-  headerRole: { fontSize: 15, color: 'rgba(255,255,255,0.85)', marginTop: 4 },
-  badge: {
-    fontSize: 12, fontWeight: 600, color: '#fff',
-    background: 'rgba(255,255,255,0.2)', padding: '4px 12px',
-    borderRadius: 20, letterSpacing: '0.5px',
-  },
-  editBtn: {
-    marginTop: 16, display: 'flex', alignItems: 'center', gap: 8,
-    background: 'rgba(255,255,255,0.2)', border: '1.5px solid rgba(255,255,255,0.4)',
-    color: '#fff', padding: '10px 24px', borderRadius: 30,
-    cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', fontWeight: 600, fontSize: 14,
-  },
-  tabBar: {
-    display: 'flex', gap: 8, padding: '14px 20px',
-    background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-    overflowX: 'auto',
-  },
-  tabBtn: {
-    display: 'flex', alignItems: 'center', gap: 6,
-    padding: '9px 18px', borderRadius: 30, border: 'none',
-    background: '#f0f4f3', color: '#666',
-    fontFamily: 'DM Sans, sans-serif', fontWeight: 600, fontSize: 13,
-    cursor: 'pointer', whiteSpace: 'nowrap',
-  },
-  tabActive: {
-    background: '#04957d', color: '#fff',
-    boxShadow: '0 4px 12px rgba(4,149,125,0.3)',
-  },
-  content: { maxWidth: 760, margin: '24px auto', padding: '0 20px 40px' },
-  card: {
-    background: '#fff', borderRadius: 20,
-    padding: 28, boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
-  },
-  cardTitle: {
-    fontSize: 16, fontWeight: 700, color: '#1a1a2e',
-    display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24,
-    fontFamily: 'Syne, sans-serif',
-  },
-  grid2: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 },
-  fieldLabel: { fontSize: 12, fontWeight: 600, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  statLabel: { fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 },
-  statValue: { fontSize: 16, fontWeight: 700, color: '#04957d' },
-  emptyBox: {
-    display: 'flex', flexDirection: 'column', alignItems: 'center',
-    padding: '48px 20px', background: '#f9fffe', borderRadius: 14,
-  },
-  actCard: {
-    display: 'flex', alignItems: 'center', gap: 14,
-    background: '#f9fffe', borderRadius: 14, padding: '14px 16px',
-    border: '1px solid #e8f5f2',
-  },
-  actIcon: {
-    width: 44, height: 44, borderRadius: '50%',
-    background: '#fff8e1', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 20, flexShrink: 0,
-  },
-  actType: { fontWeight: 600, color: '#1a1a2e', fontSize: 14 },
-  actData: { color: '#888', fontSize: 12, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  actDate: { fontSize: 11, color: '#aaa', whiteSpace: 'nowrap', flexShrink: 0 },
-};
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function Modal({ open, onClose, title, children, width = 520 }: {
+  open: boolean; onClose: () => void; title: string;
+  children: React.ReactNode; width?: number;
+}) {
+  if (!open) return null;
+  return (
+    <div style={{
+      position: "fixed", inset: 0,
+      background: "rgba(26,41,64,0.45)", backdropFilter: "blur(6px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      zIndex: 9999, padding: 20, animation: "fadeIn 0.18s ease",
+    }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div style={{
+        background: SB.surface, borderRadius: 24,
+        width: "100%", maxWidth: width, maxHeight: "90vh",
+        overflow: "auto", boxShadow: "0 24px 60px rgba(46,134,171,0.22)",
+        border: `1px solid ${SB.border}`, animation: "slideIn 0.22s ease",
+      }}>
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "22px 28px 18px", borderBottom: `1px solid ${SB.border}`,
+        }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: SB.text1 }}>{title}</h3>
+          <button onClick={onClose} style={{
+            background: SB.surfaceAlt, border: "none", borderRadius: 10,
+            width: 34, height: 34, display: "flex", alignItems: "center",
+            justifyContent: "center", cursor: "pointer", color: SB.text3,
+          }}><LuX size={16} /></button>
+        </div>
+        <div style={{ padding: "24px 28px 28px" }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Calendrier des congés ─────────────────────────────────────────────────────
+function CongesCalendar({ conges }: {
+  conges: Array<{ dateDebut: string; dateFin: string; type?: string; valide?: boolean }>;
+}) {
+  const [date, setDate] = useState(new Date());
+  const year  = date.getFullYear();
+  const month = date.getMonth();
+
+  const daysInMonth  = new Date(year, month + 1, 0).getDate();
+  const firstWeekDay = new Date(year, month, 1).getDay();
+  const offset       = (firstWeekDay + 6) % 7; // lundi = 0
+
+  const monthNames = ["Janvier","Février","Mars","Avril","Mai","Juin",
+    "Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+
+  function isCongeDay(d: number) {
+    const day = new Date(year, month, d);
+    return conges.find((c) => {
+      const s = new Date(c.dateDebut);
+      const e = new Date(c.dateFin);
+      return day >= s && day <= e;
+    });
+  }
+
+  return (
+    <div>
+      {/* Nav */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+        <button onClick={() => setDate(new Date(year, month - 1))} style={{
+          background: SB.surfaceAlt, border: `1px solid ${SB.border}`,
+          borderRadius: 10, width: 34, height: 34,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: SB.text2,
+        }}><LuChevronLeft size={16} /></button>
+        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 14, fontWeight: 600, color: SB.text1 }}>
+          {monthNames[month]} {year}
+        </span>
+        <button onClick={() => setDate(new Date(year, month + 1))} style={{
+          background: SB.surfaceAlt, border: `1px solid ${SB.border}`,
+          borderRadius: 10, width: 34, height: 34,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: SB.text2,
+        }}><LuChevronRight size={16} /></button>
+      </div>
+
+      {/* En-têtes jours */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 8 }}>
+        {["Lu","Ma","Me","Je","Ve","Sa","Di"].map((d) => (
+          <div key={d} style={{ textAlign: "center", fontSize: 10, fontWeight: 700,
+            color: SB.text3, fontFamily: "'DM Mono', monospace", textTransform: "uppercase" }}>
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* Grille */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+        {Array.from({ length: offset }).map((_, i) => <div key={`e-${i}`} />)}
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const d = i + 1;
+          const conge = isCongeDay(d);
+          const isToday = new Date().getFullYear() === year &&
+                          new Date().getMonth() === month &&
+                          new Date().getDate() === d;
+          const bgColor = conge
+            ? (conge.valide ? `${SB.teal}22` : `${SB.amber}18`)
+            : isToday ? `${SB.blue}12` : "transparent";
+          const textColor = conge
+            ? (conge.valide ? SB.teal : SB.amber)
+            : isToday ? SB.blue : SB.text2;
+          const borderColor = isToday ? SB.blue : conge
+            ? (conge.valide ? SB.teal : SB.amber) : "transparent";
+
+          return (
+            <div key={d} style={{
+              textAlign: "center", padding: "6px 0", borderRadius: 8, fontSize: 12,
+              fontFamily: "'DM Mono', monospace", background: bgColor,
+              color: textColor, fontWeight: isToday ? 700 : 400,
+              border: `1.5px solid ${borderColor}`,
+              transition: "all 0.12s",
+            }}>
+              {d}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Légende */}
+      <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
+        {[
+          { color: SB.teal, label: "Congé validé" },
+          { color: SB.amber, label: "En attente" },
+          { color: SB.blue, label: "Aujourd'hui" },
+        ].map((l) => (
+          <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ width: 10, height: 10, borderRadius: 3, background: `${l.color}30`,
+              border: `1.5px solid ${l.color}` }} />
+            <span style={{ fontSize: 11, color: SB.text3, fontFamily: "'DM Mono', monospace" }}>{l.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Barre de progression ──────────────────────────────────────────────────────
+function ProgressBar({ value, max, color = SB.cyan }: { value: number; max: number; color?: string }) {
+  const pct = max > 0 ? Math.min(Math.round((value / max) * 100), 100) : 0;
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+        <span style={{ fontSize: 12, color: SB.text3 }}>{value} / {max} jours</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color, fontFamily: "'DM Mono', monospace" }}>{pct}%</span>
+      </div>
+      <div style={{ height: 6, background: "rgba(46,134,171,0.10)", borderRadius: 4, overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${color}, ${SB.cyan})`,
+          borderRadius: 4, transition: "width 1.2s ease" }} />
+      </div>
+    </div>
+  );
+}
+
+// ── Toggle Switch ─────────────────────────────────────────────────────────────
+function Toggle({ on, onToggle, label, description, icon: Icon, danger }: {
+  on: boolean; onToggle: () => void; label: string;
+  description?: string; icon?: React.ElementType; danger?: boolean;
+}) {
+  const color = danger ? SB.red : SB.teal;
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "16px 18px", borderRadius: 14,
+      background: on ? `${color}08` : SB.surfaceAlt,
+      border: `1px solid ${on ? `${color}25` : SB.border}`,
+      transition: "all 0.2s", cursor: "pointer",
+    }} onClick={onToggle}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        {Icon && (
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}14`,
+            color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Icon size={17} />
+          </div>
+        )}
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: SB.text1 }}>{label}</div>
+          {description && <div style={{ fontSize: 12, color: SB.text3, marginTop: 2 }}>{description}</div>}
+        </div>
+      </div>
+      <div style={{ color: on ? color : SB.text3 }}>
+        {on ? <LuToggleRight size={28} /> : <LuToggleLeft size={28} />}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PAGE PRINCIPALE
+// ══════════════════════════════════════════════════════════════════════════════
+export default function ProfilePage() {
+  const { get, put, post } = useApi();
+
+  // ── États ─────────────────────────────────────────────────────────────────
+  const [profile, setProfile]   = useState<UserProfile | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabId>("profil");
+
+  // Modals
+  const [editOpen, setEditOpen]     = useState(false);
+  const [congeOpen, setCongeOpen]   = useState(false);
+  const [avanceOpen, setAvanceOpen] = useState(false);
+  const [mdpOpen, setMdpOpen]       = useState(false);
+
+  // Sécurité
+  const [twoFA, setTwoFA]       = useState(false);
+  const [sessions, setSessions] = useState(true);
+  const [actif, setActif]       = useState(true);
+
+  // Formulaire édition profil
+  const [editForm, setEditForm] = useState({
+    nom: "", email: "", telephone: "", cin: "",
+    sexe: "HOMME", situation: "CELIBATAIRE", enfants: "0",
+  });
+
+  // Formulaire congé
+  const [congeForm, setCongeForm] = useState({
+    dateDebut: "", dateFin: "", type: "SIMPLE", motif: "",
+  });
+
+  // Formulaire avance
+  const [avanceMontant, setAvanceMontant] = useState("");
+
+  // Formulaire mdp
+  const [mdpForm, setMdpForm] = useState({
+    actuel: "", nouveau: "", confirmer: "",
+  });
+
+  const [saving, setSaving]   = useState(false);
+  const [toast, setToast]     = useState<{ msg: string; ok: boolean } | null>(null);
+
+  // ── Récupération du profil ────────────────────────────────────────────────
+  // On utilise l'id depuis le token stocké ou depuis l'auth context
+  const userId = (() => {
+    try {
+      const raw = localStorage.getItem("user");
+      if (raw) return JSON.parse(raw)?.id;
+    } catch {}
+    return null;
+  })();
+
+  const fetchProfile = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await get(`rh/staff/profile/${userId}`);
+      setProfile(data);
+      setEditForm({
+        nom:        data.nom        || "",
+        email:      data.email      || "",
+        telephone:  data.telephone  || "",
+        cin:        data.cin        || "",
+        sexe:       data.sexe       || "HOMME",
+        situation:  data.situation  || "CELIBATAIRE",
+        enfants:    String(data.enfants ?? 0),
+      });
+      setActif(true);
+    } catch {
+      // Données de démonstration si l'API n'est pas disponible
+      const demo: UserProfile = {
+        id: 1, nom: "Jean Rakoto", email: "jean.rakoto@smart.mg",
+        telephone: "+261 34 12 345 67", cin: "101 234 567 890",
+        sexe: "HOMME", situation: "MARIE", enfants: 2,
+        dateEmbauche: "2022-03-15", role: "ADMIN", salaire: 1_200_000,
+        boolcnaps: true, numeroCnaps: "0012345678",
+        profession: { poste: "Responsable Commercial", idEntreprise: 1 },
+        cnaps: { montantPersonnel: 12_000, montantEntreprise: 15_000 },
+        conges: [
+          { id: 1, dateDebut: "2025-12-23", dateFin: "2025-12-27", type: "SIMPLE",  valide: true },
+          { id: 2, dateDebut: "2026-02-10", dateFin: "2026-02-14", type: "MALADIE", valide: false },
+          { id: 3, dateDebut: "2026-04-07", dateFin: "2026-04-11", type: "SIMPLE",  valide: true },
+        ],
+      };
+      setProfile(demo);
+      setEditForm({
+        nom: demo.nom, email: demo.email, telephone: demo.telephone || "",
+        cin: demo.cin || "", sexe: demo.sexe || "HOMME",
+        situation: demo.situation || "CELIBATAIRE", enfants: String(demo.enfants ?? 0),
+      });
+      setError("Mode démonstration — données simulées");
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => { fetchProfile(); }, [fetchProfile]);
+
+  // ── Toast ─────────────────────────────────────────────────────────────────
+  function showToast(msg: string, ok = true) {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3200);
+  }
+
+  // ── Sauvegarde profil ─────────────────────────────────────────────────────
+  async function handleSaveProfile() {
+    if (!profile) return;
+    setSaving(true);
+    try {
+      await put(`rh/staff/id/${profile.id}`, {
+        ...editForm, enfants: parseInt(editForm.enfants, 10),
+      });
+      await fetchProfile();
+      setEditOpen(false);
+      showToast("Profil mis à jour avec succès");
+    } catch {
+      showToast("Erreur lors de la mise à jour", false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // ── Demande de congé ──────────────────────────────────────────────────────
+  async function handleDemanderConge() {
+    if (!profile) return;
+    setSaving(true);
+    try {
+      await post("rh/conge/demander", {
+        idUser:    profile.id,
+        type:      congeForm.type,
+        dateDebut: congeForm.dateDebut,
+        dateFin:   congeForm.dateFin,
+        motif:     congeForm.motif || undefined,
+      });
+      await fetchProfile();
+      setCongeOpen(false);
+      setCongeForm({ dateDebut: "", dateFin: "", type: "SIMPLE", motif: "" });
+      showToast("Demande de congé envoyée");
+    } catch {
+      showToast("Erreur lors de la demande de congé", false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // ── Calculs congés ────────────────────────────────────────────────────────
+  const congesValides = profile?.conges?.filter((c) => c.valide) ?? [];
+  const congesEnAttente = profile?.conges?.filter((c) => !c.valide) ?? [];
+  const SOLDE_ANNUEL   = 21;
+  const joursPris = congesValides.reduce((sum, c) => sum + diffDays(c.dateDebut, c.dateFin), 0);
+  const joursRestants = Math.max(SOLDE_ANNUEL - joursPris, 0);
+
+  // ── Calculs salaire ───────────────────────────────────────────────────────
+  const salaireBrut = profile?.salaire ?? 0;
+  const cotisationPersonnel = profile?.cnaps?.montantPersonnel ?? Math.round(salaireBrut * 0.01);
+  const salaireNet = salaireBrut - cotisationPersonnel;
+
+  // ── Onglets ───────────────────────────────────────────────────────────────
+  const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
+    { id: "profil",   label: "Profil",    icon: LuUser },
+    { id: "cnaps",    label: "CNAPS",     icon: LuShieldCheck },
+    { id: "salaire",  label: "Salaire",   icon: LuBanknote },
+    { id: "conges",   label: "Congés",    icon: LuCalendarDays },
+    { id: "securite", label: "Sécurité",  icon: LuShield },
+  ];
+
+  // ── Loading ───────────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center",
+        height: "60vh", gap: 12, flexDirection: "column" }}>
+        <LuLoader size={32} color={SB.cyan} style={{ animation: "spin 1s linear infinite" }} />
+        <p style={{ color: SB.text3, fontFamily: "'DM Mono', monospace", fontSize: 13 }}>
+          Chargement du profil…
+        </p>
+      </div>
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // RENDU
+  // ══════════════════════════════════════════════════════════════════════════
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24, animation: "slideIn 0.35s ease" }}>
+
+      {/* ── CSS animations (injectées inline) ─────────────────────────────── */}
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+      `}</style>
+
+      {/* ── Toast ─────────────────────────────────────────────────────────── */}
+      {toast && (
+        <div style={{
+          position: "fixed", top: 24, right: 24, zIndex: 99999,
+          background: toast.ok ? `${SB.teal}F0` : `${SB.red}F0`,
+          color: "#fff", borderRadius: 14, padding: "12px 20px",
+          display: "flex", alignItems: "center", gap: 10,
+          boxShadow: "0 8px 28px rgba(0,0,0,0.18)",
+          animation: "toastIn 0.25s ease", fontSize: 13, fontWeight: 500,
+        }}>
+          {toast.ok ? <LuCheck size={16} /> : <LuCircleAlert size={16} />}
+          {toast.msg}
+        </div>
+      )}
+
+      {/* ── Bannière démo ─────────────────────────────────────────────────── */}
+      {error && (
+        <div style={{
+          background: "#fffbeb", border: "1px solid #f59e0b",
+          borderRadius: 12, padding: "10px 16px",
+          display: "flex", alignItems: "center", gap: 8,
+          color: "#92400e", fontSize: 12,
+        }}>
+          <LuCircleAlert size={14} />
+          {error}
+        </div>
+      )}
+
+      {/* ── Carte hero du profil ───────────────────────────────────────────── */}
+      <Card style={{
+        background: "linear-gradient(135deg, #f0f9ff 0%, #ffffff 50%, #f0faf5 100%)",
+        border: "1px solid rgba(23,168,184,0.20)",
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Glow décoratif */}
+        <div style={{
+          position: "absolute", top: -60, right: -60,
+          width: 220, height: 220, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(23,168,184,0.10) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: 22, position: "relative" }}>
+          <Avatar nom={profile?.nom ?? "?"} size={80} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
+              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: SB.text1 }}>
+                {profile?.nom}
+              </h1>
+              <Badge
+                label={profile?.role ?? "USER"}
+                color={profile?.role === "ADMIN" ? SB.blue : SB.teal}
+                bg={profile?.role === "ADMIN" ? "rgba(46,134,171,0.10)" : "rgba(27,138,90,0.10)"}
+              />
+              <Badge
+                label={actif ? "Actif" : "Inactif"}
+                color={actif ? SB.teal : SB.red}
+                bg={actif ? "rgba(27,138,90,0.10)" : "rgba(224,90,90,0.10)"}
+              />
+            </div>
+            <div style={{ fontSize: 14, color: SB.text2, marginBottom: 4 }}>
+              {profile?.profession?.poste}
+            </div>
+            <div style={{ fontSize: 12, color: SB.text3, fontFamily: "'DM Mono', monospace" }}>
+              {profile?.email}
+            </div>
+          </div>
+
+          <div style={{ flexShrink: 0 }}>
+            <Btn icon={LuRefreshCw} variant="outline" small onClick={fetchProfile}>
+              Actualiser
+            </Btn>
+          </div>
+        </div>
+      </Card>
+
+      {/* ── Navigation par onglets ─────────────────────────────────────────── */}
+      <div style={{
+        display: "flex", gap: 4,
+        background: SB.surface, borderRadius: 16,
+        padding: 6, border: `1px solid ${SB.border}`,
+        boxShadow: "0 1px 4px rgba(46,134,171,0.06)",
+        overflowX: "auto",
+      }}>
+        {tabs.map((tab) => {
+          const active = activeTab === tab.id;
+          return (
+            <button key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "9px 18px", borderRadius: 11,
+                border: "none", cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500,
+                whiteSpace: "nowrap", transition: "all 0.18s",
+                background: active ? `linear-gradient(135deg, ${SB.blue}, ${SB.cyan})` : "transparent",
+                color: active ? "#fff" : SB.text2,
+                boxShadow: active ? "0 2px 10px rgba(23,168,184,0.30)" : "none",
+              }}
+            >
+              <tab.icon size={15} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          ONGLET PROFIL
+      ══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "profil" && (
+        <Card>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: SB.text1 }}>
+              Informations personnelles
+            </h2>
+            <Btn icon={LuPencil} variant="outline" small onClick={() => setEditOpen(true)}>
+              Modifier
+            </Btn>
+          </div>
+
+          <InfoRow icon={LuUser}   label="Nom complet"       value={profile?.nom}        accent={SB.blue} />
+          <InfoRow icon={LuMail}   label="Adresse email"     value={profile?.email}       accent={SB.cyan} />
+          <InfoRow icon={LuPhone}  label="Téléphone"         value={profile?.telephone}   accent={SB.teal} />
+          <InfoRow icon={LuBadgeCheck} label="CIN"           value={profile?.cin}         accent={SB.blue} />
+          <InfoRow icon={LuUser}   label="Sexe"              value={profile?.sexe}        accent={SB.text3} />
+          <InfoRow icon={LuUser}   label="Situation familiale" value={profile?.situation} accent={SB.text3} />
+          <InfoRow icon={LuUser}   label="Nombre d'enfants"  value={profile?.enfants}     accent={SB.text3} />
+          <InfoRow icon={LuCalendarDays} label="Date d'embauche"
+            value={profile?.dateEmbauche ? fmtDate(profile.dateEmbauche) : undefined}
+            accent={SB.amber} />
+          <InfoRow icon={LuBadgeCheck} label="Poste"
+            value={profile?.profession?.poste} accent={SB.blue} />
+        </Card>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          ONGLET CNAPS
+      ══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "cnaps" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Statut */}
+          <Card>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: 14,
+                background: profile?.boolcnaps ? "rgba(27,138,90,0.12)" : "rgba(224,90,90,0.10)",
+                color: profile?.boolcnaps ? SB.teal : SB.red,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {profile?.boolcnaps ? <LuShieldCheck size={22} /> : <LuShieldOff size={22} />}
+              </div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: SB.text1 }}>
+                  {profile?.boolcnaps ? "Affilié CNAPS" : "Non affilié CNAPS"}
+                </div>
+                <div style={{ fontSize: 13, color: SB.text3, marginTop: 2 }}>
+                  Caisse Nationale de Prévoyance Sociale
+                </div>
+              </div>
+              <div style={{ marginLeft: "auto" }}>
+                <Badge
+                  label={profile?.boolcnaps ? "Actif" : "Inactif"}
+                  color={profile?.boolcnaps ? SB.teal : SB.red}
+                  bg={profile?.boolcnaps ? "rgba(27,138,90,0.10)" : "rgba(224,90,90,0.10)"}
+                />
+              </div>
+            </div>
+
+            <InfoRow icon={LuBadgeCheck} label="Numéro CNAPS"
+              value={profile?.numeroCnaps ?? (profile?.boolcnaps ? "Non renseigné" : "—")}
+              accent={SB.blue} />
+          </Card>
+
+          {/* Cotisations */}
+          {profile?.boolcnaps && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <Card>
+                <div style={{ fontSize: 11, fontWeight: 600, color: SB.text3,
+                  fontFamily: "'DM Mono', monospace", textTransform: "uppercase",
+                  letterSpacing: "0.8px", marginBottom: 12 }}>
+                  Part salarié
+                </div>
+                <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 26, fontWeight: 700, color: SB.blue }}>
+                  {fmtAr(profile?.cnaps?.montantPersonnel ?? cotisationPersonnel)}
+                </div>
+                <div style={{ fontSize: 12, color: SB.text3, marginTop: 6 }}>par mois</div>
+              </Card>
+              <Card>
+                <div style={{ fontSize: 11, fontWeight: 600, color: SB.text3,
+                  fontFamily: "'DM Mono', monospace", textTransform: "uppercase",
+                  letterSpacing: "0.8px", marginBottom: 12 }}>
+                  Part employeur
+                </div>
+                <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 26, fontWeight: 700, color: SB.cyan }}>
+                  {fmtAr(profile?.cnaps?.montantEntreprise ?? 0)}
+                </div>
+                <div style={{ fontSize: 12, color: SB.text3, marginTop: 6 }}>par mois</div>
+              </Card>
+            </div>
+          )}
+
+          {/* Tableau récap */}
+          {profile?.boolcnaps && (
+            <Card>
+              <div style={{ fontSize: 13, fontWeight: 600, color: SB.text1, marginBottom: 16 }}>
+                Récapitulatif annuel
+              </div>
+              {[
+                {
+                  label: "Cotisation annuelle salarié",
+                  value: fmtAr((profile?.cnaps?.montantPersonnel ?? cotisationPersonnel) * 12),
+                  color: SB.blue,
+                },
+                {
+                  label: "Cotisation annuelle employeur",
+                  value: fmtAr((profile?.cnaps?.montantEntreprise ?? 0) * 12),
+                  color: SB.cyan,
+                },
+                {
+                  label: "Total charges annuelles",
+                  value: fmtAr(((profile?.cnaps?.montantPersonnel ?? cotisationPersonnel) + (profile?.cnaps?.montantEntreprise ?? 0)) * 12),
+                  color: SB.teal,
+                },
+              ].map((row) => (
+                <div key={row.label} style={{
+                  display: "flex", justifyContent: "space-between",
+                  alignItems: "center", padding: "12px 0",
+                  borderBottom: `1px solid ${SB.border}`,
+                }}>
+                  <span style={{ fontSize: 13, color: SB.text2 }}>{row.label}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: row.color,
+                    fontFamily: "'DM Mono', monospace" }}>{row.value}</span>
+                </div>
+              ))}
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          ONGLET SALAIRE
+      ══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "salaire" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Cartes brut / net */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <Card style={{
+              background: "linear-gradient(135deg, rgba(46,134,171,0.06), rgba(23,168,184,0.04))",
+              border: `1px solid rgba(23,168,184,0.20)`,
+            }}>
+              <div style={{ fontSize: 11, color: SB.blue, fontFamily: "'DM Mono', monospace",
+                textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 600, marginBottom: 12 }}>
+                Salaire brut
+              </div>
+              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 28, fontWeight: 700, color: SB.text1 }}>
+                {fmtAr(salaireBrut)}
+              </div>
+              <div style={{ fontSize: 12, color: SB.text3, marginTop: 6 }}>mensuel</div>
+            </Card>
+
+            <Card style={{
+              background: "linear-gradient(135deg, rgba(27,138,90,0.06), rgba(23,168,184,0.04))",
+              border: `1px solid rgba(27,138,90,0.20)`,
+            }}>
+              <div style={{ fontSize: 11, color: SB.teal, fontFamily: "'DM Mono', monospace",
+                textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 600, marginBottom: 12 }}>
+                Salaire net
+              </div>
+              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 28, fontWeight: 700, color: SB.teal }}>
+                {fmtAr(salaireNet)}
+              </div>
+              <div style={{ fontSize: 12, color: SB.text3, marginTop: 6 }}>après déductions</div>
+            </Card>
+          </div>
+
+          {/* Déductions */}
+          <Card>
+            <div style={{ fontSize: 13, fontWeight: 600, color: SB.text1, marginBottom: 16 }}>
+              Déductions mensuelles
+            </div>
+            {[
+              { label: "Cotisation CNAPS (salarié)", value: cotisationPersonnel, color: SB.blue },
+              { label: "Salaire brut",               value: salaireBrut,         color: SB.text2 },
+              { label: "Salaire net à percevoir",    value: salaireNet,           color: SB.teal },
+            ].map((row, i) => (
+              <div key={row.label} style={{
+                display: "flex", justifyContent: "space-between",
+                alignItems: "center", padding: "14px 0",
+                borderBottom: i < 2 ? `1px solid ${SB.border}` : "none",
+              }}>
+                <span style={{ fontSize: 13, color: SB.text2 }}>{row.label}</span>
+                <span style={{
+                  fontSize: 14, fontWeight: 700, color: row.color,
+                  fontFamily: "'DM Mono', monospace",
+                }}>
+                  {fmtAr(row.value)}
+                </span>
+              </div>
+            ))}
+          </Card>
+
+          {/* CTA avance */}
+          <Card style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: SB.text1, marginBottom: 4 }}>
+                Demande d'avance sur salaire
+              </div>
+              <div style={{ fontSize: 13, color: SB.text3 }}>
+                Demandez une avance sur votre prochain salaire
+              </div>
+            </div>
+            <Btn icon={LuBanknote} onClick={() => setAvanceOpen(true)}>
+              Demander une avance
+            </Btn>
+          </Card>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          ONGLET CONGÉS
+      ══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "conges" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+            {[
+              { label: "Jours pris",    value: joursPris,       color: SB.red,  bg: "rgba(224,90,90,0.08)" },
+              { label: "Jours restants", value: joursRestants,  color: SB.teal, bg: "rgba(27,138,90,0.08)" },
+              { label: "En attente",    value: congesEnAttente.length, color: SB.amber, bg: "rgba(217,119,6,0.08)" },
+            ].map((stat) => (
+              <Card key={stat.label} style={{ background: stat.bg, border: `1px solid ${stat.color}22`, textAlign: "center" }}>
+                <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 32, fontWeight: 700, color: stat.color }}>
+                  {stat.value}
+                </div>
+                <div style={{ fontSize: 12, color: SB.text3, marginTop: 4 }}>{stat.label}</div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Barre de progression */}
+          <Card>
+            <div style={{ fontSize: 13, fontWeight: 600, color: SB.text1, marginBottom: 14 }}>
+              Consommation congés annuels
+            </div>
+            <ProgressBar value={joursPris} max={SOLDE_ANNUEL} color={SB.blue} />
+          </Card>
+
+          {/* Calendrier */}
+          <Card>
+            <div style={{ fontSize: 13, fontWeight: 600, color: SB.text1, marginBottom: 18 }}>
+              Calendrier des congés
+            </div>
+            <CongesCalendar conges={profile?.conges ?? []} />
+          </Card>
+
+          {/* Historique */}
+          <Card>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: SB.text1 }}>Historique des congés</div>
+              <Btn icon={LuPlus} small onClick={() => setCongeOpen(true)}>
+                Demander un congé
+              </Btn>
+            </div>
+
+            {(profile?.conges?.length ?? 0) === 0 ? (
+              <div style={{ textAlign: "center", padding: "28px 0", color: SB.text3, fontSize: 13 }}>
+                Aucun congé enregistré
+              </div>
+            ) : (
+              profile?.conges?.map((c) => (
+                <div key={c.id} style={{
+                  display: "flex", alignItems: "center", gap: 14,
+                  padding: "14px 0", borderBottom: `1px solid ${SB.border}`,
+                }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                    background: c.valide ? "rgba(27,138,90,0.10)" : "rgba(217,119,6,0.10)",
+                    color: c.valide ? SB.teal : SB.amber,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <LuCalendarDays size={16} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: SB.text1 }}>
+                      {c.type ?? "Congé"} — {diffDays(c.dateDebut, c.dateFin)} jour(s)
+                    </div>
+                    <div style={{ fontSize: 12, color: SB.text3, marginTop: 2 }}>
+                      {fmtDate(c.dateDebut)} → {fmtDate(c.dateFin)}
+                    </div>
+                  </div>
+                  <Badge
+                    label={c.valide ? "Validé" : "En attente"}
+                    color={c.valide ? SB.teal : SB.amber}
+                    bg={c.valide ? "rgba(27,138,90,0.10)" : "rgba(217,119,6,0.10)"}
+                  />
+                </div>
+              ))
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          ONGLET SÉCURITÉ
+      ══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "securite" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* Mot de passe */}
+          <Card>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: SB.text1, marginBottom: 4 }}>
+                  Mot de passe
+                </div>
+                <div style={{ fontSize: 13, color: SB.text3 }}>Dernière modification : il y a 3 mois</div>
+              </div>
+              <Btn icon={LuKeyRound} variant="outline" small onClick={() => setMdpOpen(true)}>
+                Changer
+              </Btn>
+            </div>
+          </Card>
+
+          {/* Toggles sécurité */}
+          <Card>
+            <div style={{ fontSize: 13, fontWeight: 600, color: SB.text1, marginBottom: 16 }}>
+              Options de sécurité
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <Toggle
+                on={twoFA}
+                onToggle={() => { setTwoFA(!twoFA); showToast(!twoFA ? "2FA activé" : "2FA désactivé"); }}
+                label="Authentification à deux facteurs (2FA)"
+                description="Sécurisez votre compte avec une vérification supplémentaire"
+                icon={LuSmartphone}
+              />
+              <Toggle
+                on={sessions}
+                onToggle={() => { setSessions(!sessions); showToast("Paramètres sessions mis à jour"); }}
+                label="Gestion des sessions actives"
+                description="Déconnecter automatiquement les sessions inactives après 24h"
+                icon={LuShield}
+              />
+            </div>
+          </Card>
+
+          {/* Zone de danger */}
+          <Card style={{ border: "1px solid rgba(224,90,90,0.20)", background: "rgba(224,90,90,0.02)" }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: SB.red, marginBottom: 16,
+              display: "flex", alignItems: "center", gap: 8 }}>
+              <LuCircleAlert size={16} />
+              Zone dangereuse
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <Toggle
+                on={!actif}
+                onToggle={() => {
+                  setActif(!actif);
+                  showToast(!actif ? "Compte réactivé" : "Compte désactivé", !actif);
+                }}
+                label={actif ? "Désactiver le compte" : "Réactiver le compte"}
+                description="Un compte désactivé ne peut plus se connecter. Les données sont conservées."
+                icon={LuUserX}
+                danger
+              />
+
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "16px 18px", borderRadius: 14,
+                background: "rgba(224,90,90,0.04)", border: `1px solid rgba(224,90,90,0.15)`,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10,
+                    background: "rgba(224,90,90,0.10)", color: SB.red,
+                    display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <LuLogOut size={17} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: SB.text1 }}>
+                      Déconnexion de toutes les sessions
+                    </div>
+                    <div style={{ fontSize: 12, color: SB.text3, marginTop: 2 }}>
+                      Ferme toutes les sessions actives sur tous les appareils
+                    </div>
+                  </div>
+                </div>
+                <Btn variant="ghost" small danger onClick={() => showToast("Toutes les sessions ont été fermées")}>
+                  Déconnecter tout
+                </Btn>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          MODAL — Modifier le profil
+      ══════════════════════════════════════════════════════════════════════ */}
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Modifier le profil">
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <Field label="Nom complet" value={editForm.nom}
+              onChange={(v) => setEditForm((f) => ({ ...f, nom: v }))} />
+            <Field label="Email" value={editForm.email} type="email"
+              onChange={(v) => setEditForm((f) => ({ ...f, email: v }))} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <Field label="Téléphone" value={editForm.telephone}
+              onChange={(v) => setEditForm((f) => ({ ...f, telephone: v }))} />
+            <Field label="CIN" value={editForm.cin}
+              onChange={(v) => setEditForm((f) => ({ ...f, cin: v }))} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+            <Field label="Sexe" value={editForm.sexe} type="select"
+              options={[{ value: "HOMME", label: "Homme" }, { value: "FEMME", label: "Femme" }]}
+              onChange={(v) => setEditForm((f) => ({ ...f, sexe: v }))} />
+            <Field label="Situation" value={editForm.situation} type="select"
+              options={[{ value: "CELIBATAIRE", label: "Célibataire" }, { value: "MARIE", label: "Marié(e)" }]}
+              onChange={(v) => setEditForm((f) => ({ ...f, situation: v }))} />
+            <Field label="Enfants" value={editForm.enfants} type="number"
+              onChange={(v) => setEditForm((f) => ({ ...f, enfants: v }))} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
+            <Btn variant="outline" onClick={() => setEditOpen(false)}>Annuler</Btn>
+            <Btn onClick={handleSaveProfile} disabled={saving} icon={saving ? LuLoader : undefined}>
+              {saving ? "Enregistrement…" : "Enregistrer"}
+            </Btn>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          MODAL — Demande de congé
+      ══════════════════════════════════════════════════════════════════════ */}
+      <Modal open={congeOpen} onClose={() => setCongeOpen(false)} title="Demande de congé">
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <Field label="Type de congé" value={congeForm.type} type="select"
+            options={[
+              { value: "SIMPLE",  label: "Congé simple" },
+              { value: "MALADIE", label: "Maladie" },
+              { value: "FERIE",   label: "Jour férié" },
+            ]}
+            onChange={(v) => setCongeForm((f) => ({ ...f, type: v }))} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <Field label="Date de début" value={congeForm.dateDebut} type="date"
+              onChange={(v) => setCongeForm((f) => ({ ...f, dateDebut: v }))} />
+            <Field label="Date de fin" value={congeForm.dateFin} type="date"
+              onChange={(v) => setCongeForm((f) => ({ ...f, dateFin: v }))} />
+          </div>
+          <Field label="Motif (optionnel)" value={congeForm.motif}
+            onChange={(v) => setCongeForm((f) => ({ ...f, motif: v }))} />
+
+          {/* Résumé durée */}
+          {congeForm.dateDebut && congeForm.dateFin && (
+            <div style={{
+              background: "rgba(46,134,171,0.06)", border: `1px solid ${SB.border}`,
+              borderRadius: 12, padding: "12px 16px",
+              display: "flex", alignItems: "center", gap: 8,
+              fontSize: 13, color: SB.blue,
+            }}>
+              <LuCalendarDays size={15} />
+              Durée : <strong>{diffDays(congeForm.dateDebut, congeForm.dateFin)} jour(s)</strong>
+              &nbsp;·&nbsp;Solde restant après : <strong>{Math.max(joursRestants - diffDays(congeForm.dateDebut, congeForm.dateFin), 0)} jour(s)</strong>
+            </div>
+          )}
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
+            <Btn variant="outline" onClick={() => setCongeOpen(false)}>Annuler</Btn>
+            <Btn onClick={handleDemanderConge} disabled={saving || !congeForm.dateDebut || !congeForm.dateFin}
+              icon={saving ? LuLoader : LuCalendarDays}>
+              {saving ? "Envoi…" : "Envoyer la demande"}
+            </Btn>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          MODAL — Demande d'avance
+      ══════════════════════════════════════════════════════════════════════ */}
+      <Modal open={avanceOpen} onClose={() => setAvanceOpen(false)} title="Demande d'avance sur salaire" width={440}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ background: "rgba(46,134,171,0.06)", borderRadius: 12, padding: "14px 16px",
+            fontSize: 13, color: SB.text2, lineHeight: 1.6 }}>
+            Votre salaire net mensuel : <strong style={{ color: SB.teal }}>{fmtAr(salaireNet)}</strong>
+            <br />
+            L'avance maximale accordée est de 50% soit <strong style={{ color: SB.blue }}>{fmtAr(Math.round(salaireNet * 0.5))}</strong>
+          </div>
+          <Field label="Montant demandé (Ar)" value={avanceMontant} type="number"
+            onChange={setAvanceMontant} />
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
+            <Btn variant="outline" onClick={() => setAvanceOpen(false)}>Annuler</Btn>
+            <Btn icon={LuBanknote} disabled={!avanceMontant || parseInt(avanceMontant) <= 0}
+              onClick={() => {
+                setAvanceOpen(false);
+                setAvanceMontant("");
+                showToast("Demande d'avance envoyée avec succès");
+              }}>
+              Envoyer la demande
+            </Btn>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          MODAL — Changer mot de passe
+      ══════════════════════════════════════════════════════════════════════ */}
+      <Modal open={mdpOpen} onClose={() => setMdpOpen(false)} title="Changer le mot de passe" width={440}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <Field label="Mot de passe actuel" value={mdpForm.actuel} type="password"
+            onChange={(v) => setMdpForm((f) => ({ ...f, actuel: v }))} />
+          <Field label="Nouveau mot de passe" value={mdpForm.nouveau} type="password"
+            onChange={(v) => setMdpForm((f) => ({ ...f, nouveau: v }))} />
+          <Field label="Confirmer le nouveau mot de passe" value={mdpForm.confirmer} type="password"
+            onChange={(v) => setMdpForm((f) => ({ ...f, confirmer: v }))} />
+
+          {mdpForm.nouveau && mdpForm.confirmer && mdpForm.nouveau !== mdpForm.confirmer && (
+            <div style={{ color: SB.red, fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}>
+              <LuCircleAlert size={13} /> Les mots de passe ne correspondent pas
+            </div>
+          )}
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
+            <Btn variant="outline" onClick={() => setMdpOpen(false)}>Annuler</Btn>
+            <Btn
+              icon={LuLock}
+              disabled={!mdpForm.actuel || !mdpForm.nouveau || mdpForm.nouveau !== mdpForm.confirmer}
+              onClick={async () => {
+                setSaving(true);
+                try {
+                  if (profile) {
+                    await put(`rh/staff/id/${profile.id}`, { mdp: mdpForm.nouveau });
+                    setMdpOpen(false);
+                    setMdpForm({ actuel: "", nouveau: "", confirmer: "" });
+                    showToast("Mot de passe mis à jour avec succès");
+                  }
+                } catch {
+                  showToast("Erreur lors du changement de mot de passe", false);
+                } finally {
+                  setSaving(false);
+                }
+              }}
+            >
+              {saving ? "Enregistrement…" : "Changer le mot de passe"}
+            </Btn>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}

@@ -5,7 +5,6 @@ import {
   LuLayoutDashboard,
   LuPackage,
   LuReceiptText,
-  LuShoppingCart,
   LuTriangleAlert,
   LuUser,
   LuWallet,
@@ -14,9 +13,7 @@ import {
   LuCreditCard,
   LuChevronUp,
   LuChevronDown,
-  LuSettings,
-  LuBook,
-  LuGlobe,           // ← Nouvelle icône pour la langue
+  LuBook
 } from "react-icons/lu";
 import "./sidebar.css";
 import Logo from '../assets/images/logo-smart.png';
@@ -172,7 +169,7 @@ export default function Sidebar({
   };
 
   const handleProfile = () => {
-    navigate(`/rh/${user?.id}`);
+    navigate(`/profile/${user?.id}`);
     setIsProfileMenuOpen(false);
   };
 

@@ -37,6 +37,7 @@ import ProfileStaff from "./pages/rh/profil";
 import ProfessionScreen from "./pages/rh/profession";
 import EntrepotsScreen from "./pages/stock/entrepot";
 import EntrepotAdd from "./pages/stock/entrepot/ajout";
+import ProfilePage from "./pages/rh/profil";
 
 function App() {
   return (
@@ -255,6 +256,15 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="ADMIN">
                     <ProfessionScreen />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/profile/:id"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
                   </ProtectedRoute>
                 }
               />
