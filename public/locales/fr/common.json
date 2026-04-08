@@ -1,0 +1,27 @@
+{
+  "language": {
+    "fr": "Français",
+    "en": "English",
+    "mg": "Malagasy"
+  },
+  "save": "Enregistrer",
+  "cancel": "Annuler",
+  "close": "Fermer",
+  "title": {
+    "app_name": "Smart Business",
+    "product_detail": "Détail du produit",
+    "user_detail": "Détail de l'employé",
+    "new_sale": "Nouvelle vente",
+    "profile": "Profil"
+  },
+  "action": {
+    "add_product": "Ajouter un produit",
+    "update_product": "Modifier un produit",
+    "restock": "Réapprovisionner",
+    "add_user": "Ajouter un employé",
+    "update_user": "Modifier un employé"
+  },
+  "unit": {
+    "ariary": "Ar"
+  }
+}

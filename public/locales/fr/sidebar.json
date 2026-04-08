@@ -12,5 +12,9 @@
   "aide": "Aide & Support",
   "deconnexion": "Déconnexion",
 
-  "navigation": "Navigation"
+  "navigation": "Navigation",
+  "role":{
+    "admin": "Administrateur",
+    "user": "Employé"
+  }
 }

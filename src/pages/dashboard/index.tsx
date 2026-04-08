@@ -1,6 +1,7 @@
-// src/pages/dashboard/index.tsx — Smart Business · Thème Blanc
+// src/pages/dashboard/index.tsx
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 import {
   LuActivity,
@@ -16,62 +17,45 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 
 import "./index.css";
 import { useAuth } from '../../contexts/AuthContext';
-import { useApi, useApiFetch } from '../../hooks/useApi';
-
-// ── Utilitaires ──────────────────────────────────────────────────────────────
-function isToday(dateStr: string | Date) {
-  const d = new Date(dateStr);
-  const n = new Date();
-  return (
-    d.getFullYear() === n.getFullYear() &&
-    d.getMonth() === n.getMonth() &&
-    d.getDate() === n.getDate()
-  );
-}
-
-function fmtAr(n: number) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
-  return String(n);
-}
+import { useApi } from '../../hooks/useApi';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface DashboardData {
-  revenusHebdo:   number;
-  ventesJour:     number;
-  totalProduits:  number;
-  alertesStock:   number;
+  revenusHebdo: number;
+  ventesJour: number;
+  totalProduits: number;
+  alertesStock: number;
   totalCommandes: number;
-  variation:      string;
+  variation: string;
 }
 
 interface CaJour {
   jour: string;
-  ca:   number;
+  ca: number;
 }
 
 interface CaData {
-  mois:      string;
+  mois: string;
   totalMois: number;
-  jours:     CaJour[];
+  jours: CaJour[];
 }
 
 // ── Palette Smart Business ───────────────────────────────────────────────────
 const SB = {
-  blue:    "#2E86AB",
-  cyan:    "#17A8B8",
-  teal:    "#1B8A5A",
-  red:     "#E05A5A",
-  text1:   "#1a2940",
-  text2:   "#3d5a73",
-  text3:   "#7a95aa",
-  bg:      "#f4f7fa",
+  blue: "#2E86AB",
+  cyan: "#17A8B8",
+  teal: "#1B8A5A",
+  red: "#E05A5A",
+  text1: "#1a2940",
+  text2: "#3d5a73",
+  text3: "#7a95aa",
   surface: "#ffffff",
 };
 
 // ── Custom Tooltip ───────────────────────────────────────────────────────────
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload || !payload.length) return null;
+
   return (
     <div style={{
       backgroundColor: SB.surface,
@@ -96,7 +80,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-// ── CaLineChart ──────────────────────────────────────────────────────────────
+// ── CaLineChart Component ────────────────────────────────────────────────────
 function CaLineChart({ jours }: { jours: CaJour[] }) {
   const chartData = jours.map((d) => ({ jour: d.jour, revenu: d.ca }));
 
@@ -106,7 +90,7 @@ function CaLineChart({ jours }: { jours: CaJour[] }) {
         <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor={SB.cyan} stopOpacity={0.22} />
+              <stop offset="0%" stopColor={SB.cyan} stopOpacity={0.22} />
               <stop offset="100%" stopColor={SB.cyan} stopOpacity={0.01} />
             </linearGradient>
           </defs>
@@ -128,7 +112,7 @@ function CaLineChart({ jours }: { jours: CaJour[] }) {
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 10, fill: SB.text3, fontFamily: "'DM Mono', monospace" }}
-            tickFormatter={fmtAr}
+            tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
             width={40}
           />
           <Tooltip content={<CustomTooltip />} />
@@ -147,18 +131,26 @@ function CaLineChart({ jours }: { jours: CaJour[] }) {
   );
 }
 
-// ── KpiCard ──────────────────────────────────────────────────────────────────
+// ── KpiCard Component ────────────────────────────────────────────────────────
 interface KpiCardProps {
-  title:          string;
-  value:          string | number;
-  icon:           React.ElementType;
-  accent:         string;
-  variation?:     string;
+  title: string;
+  value: string | number;
+  icon: React.ElementType;
+  accent: string;
+  variation?: string;
   variationType?: "positive" | "negative" | "neutral";
-  onClick?:       () => void;
+  onClick?: () => void;
 }
 
-function KpiCard({ title, value, icon: Icon, accent, variation, variationType, onClick }: KpiCardProps) {
+function KpiCard({ 
+  title, 
+  value, 
+  icon: Icon, 
+  accent, 
+  variation, 
+  variationType, 
+  onClick 
+}: KpiCardProps) {
   const isPos = variationType === "positive";
   const isNeg = variationType === "negative";
 
@@ -167,8 +159,12 @@ function KpiCard({ title, value, icon: Icon, accent, variation, variationType, o
       className={`kpi-card${onClick ? " kpi-card--clickable" : ""}`}
       style={{ borderColor: "rgba(46,134,171,0.14)" }}
       onClick={onClick}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = `${accent}55`; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(46,134,171,0.14)"; }}
+      onMouseEnter={(e) => { 
+        (e.currentTarget as HTMLElement).style.borderColor = `${accent}55`; 
+      }}
+      onMouseLeave={(e) => { 
+        (e.currentTarget as HTMLElement).style.borderColor = "rgba(46,134,171,0.14)"; 
+      }}
     >
       <div
         className="kpi-card__glow"
@@ -201,30 +197,37 @@ function KpiCard({ title, value, icon: Icon, accent, variation, variationType, o
   );
 }
 
-// ── Dashboard principal ──────────────────────────────────────────────────────
+// ── Main Dashboard Component ─────────────────────────────────────────────────
 export default function Dashboard() {
+  const { t } = useTranslation(['dashboard', 'common']);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { get } = useApi();
-  
 
-  const [loading, setLoading]               = useState(true);
-  const [refreshing, setRefreshing]         = useState(false);
-  const [error, setError]                   = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
 
   const [data, setData] = useState<DashboardData>({
-    revenusHebdo: 0, ventesJour: 0, totalProduits: 0,
-    alertesStock: 0, totalCommandes: 0, variation: "",
+    revenusHebdo: 0,
+    ventesJour: 0,
+    totalProduits: 0,
+    alertesStock: 0,
+    totalCommandes: 0,
+    variation: "",
   });
 
   const [caData, setCaData] = useState<CaData>({
-    mois: "", totalMois: 0, jours: [],
+    mois: "",
+    totalMois: 0,
+    jours: [],
   });
 
+  // ── Fetch Dashboard Data ───────────────────────────────────────────────────
   const fetchDashboard = useCallback(async () => {
     setError(null);
     setSessionExpired(false);
+
     try {
       const [alertes, produits, commandes, bilan, mouvements, caJournalier] = await Promise.all([
         get<any[]>('stock/produit/alerts/'),
@@ -235,127 +238,153 @@ export default function Dashboard() {
         get<any>('finance/ca-journalier-mois'),
       ]);
 
-      const ventes = mouvements.filter((v: any) =>
-        v.type?.toString() === "SORTIE" && isToday(v.date)
+      const ventesAujourdHui = mouvements.filter((v: any) =>
+        v.type?.toString() === "SORTIE" &&
+        new Date(v.date).toDateString() === new Date().toDateString()
       );
-      const sommeVente = ventes.reduce((s: number, v: any) =>
+
+      const sommeVentesJour = ventesAujourdHui.reduce((s: number, v: any) =>
         s + (v.prixUnitaire || 0) * (v.quantite || 0), 0
       );
 
       setData({
-        revenusHebdo:   bilan?.current?.ventes || 0,
-        ventesJour:     sommeVente,
-        totalProduits:  produits.length,
-        alertesStock:   alertes.length,
+        revenusHebdo: bilan?.current?.ventes || 0,
+        ventesJour: sommeVentesJour,
+        totalProduits: produits.length,
+        alertesStock: alertes.length,
         totalCommandes: commandes.length,
-        variation:      bilan?.variation?.ca || "",
+        variation: bilan?.variation?.ca || "",
       });
 
-      setCaData(caJournalier);
-    } catch (err) {
+      setCaData(caJournalier || { mois: "", totalMois: 0, jours: [] });
+    } catch (err: any) {
       console.error('Erreur lors du chargement du dashboard:', err);
 
-      if (err instanceof Error && err.message.includes('Session expirée')) {
+      if (err.message?.includes('Session expirée') || err.status === 401) {
         setSessionExpired(true);
       } else {
-        setError("Impossible de charger les données. Utilisation des données de démonstration.");
+        setError(t('dashboard:error'));
+        // Données de démonstration
         setData({
-          revenusHebdo: 14_800_000, ventesJour: 3_250_000, totalProduits: 148,
-          alertesStock: 7, totalCommandes: 64, variation: "+12.4%",
+          revenusHebdo: 14800000,
+          ventesJour: 3250000,
+          totalProduits: 148,
+          alertesStock: 7,
+          totalCommandes: 64,
+          variation: "+12.4%",
         });
         setCaData({
           mois: "Février 2026",
-          totalMois: 87_500_000,
+          totalMois: 87500000,
           jours: Array.from({ length: 28 }, (_, i) => ({
             jour: `${i + 1}`,
-            ca: Math.round(Math.random() * 4_000_000 + 1_500_000),
+            ca: Math.round(Math.random() * 4000000 + 1500000),
           })),
         });
       }
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
-  }, [get]);
+  }, [get, t]);
 
-  useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
 
   const { logout } = useAuth();
   useEffect(() => {
     if (sessionExpired) logout();
-  }, [sessionExpired, navigate]);
+  }, [sessionExpired, logout]);
 
-  const vt =
-    data.variation?.startsWith("+") ? "positive" :
-    data.variation?.startsWith("-") ? "negative" : "neutral";
+  const variationType = data.variation?.startsWith("+") 
+    ? "positive" 
+    : data.variation?.startsWith("-") 
+      ? "negative" 
+      : "neutral";
 
   const kpis: KpiCardProps[] = [
     {
-      title: "Ventes du jour",
+      title: t('dashboard:kpi.sales_today'),
       value: `${data.ventesJour.toLocaleString("fr-FR")} Ar`,
-      icon: LuReceiptText, accent: SB.teal,
-      variation: data.variation || undefined, variationType: vt,
+      icon: LuReceiptText,
+      accent: "#1B8A5A",
+      variation: data.variation || undefined,
+      variationType,
       onClick: () => navigate("/vente"),
     },
     {
-      title: "Commandes",
+      title: t('dashboard:kpi.orders'),
       value: data.totalCommandes.toLocaleString("fr-FR"),
-      icon: LuShoppingCart, accent: SB.blue,
+      icon: LuShoppingCart,
+      accent: "#2E86AB",
       onClick: () => navigate("/vente"),
     },
     {
-      title: "Produits en stock",
+      title: t('dashboard:kpi.products_in_stock'),
       value: data.totalProduits.toLocaleString("fr-FR"),
-      icon: LuPackage, accent: SB.cyan,
+      icon: LuPackage,
+      accent: "#17A8B8",
       onClick: () => navigate("/stock"),
     },
     {
-      title: "Alertes stock",
+      title: t('dashboard:kpi.stock_alerts'),
       value: data.alertesStock,
       icon: LuTriangleAlert,
-      accent: data.alertesStock > 0 ? SB.red : SB.text3,
-      variation: data.alertesStock > 0 ? `${data.alertesStock} produit(s)` : "Tout est OK",
+      accent: data.alertesStock > 0 ? "#E05A5A" : "#7a95aa",
+      variation: data.alertesStock > 0 
+        ? `${data.alertesStock} produit(s)` 
+        : t('dashboard:variation.all_good'),
       variationType: data.alertesStock > 0 ? "negative" : "neutral",
       onClick: () => navigate("/stock"),
     },
   ];
 
   const stockItems = [
-    { label: "Produits actifs",        value: data.totalProduits,  color: SB.teal, pct: 85 },
     {
-      label: "Alertes critiques",
+      label: t('dashboard:stock_status.active_products'),
+      value: data.totalProduits,
+      color: "#1B8A5A",
+      pct: 85,
+    },
+    {
+      label: t('dashboard:stock_status.critical_alerts'),
       value: data.alertesStock,
-      color: SB.red,
+      color: "#E05A5A",
       pct: data.totalProduits > 0 ? Math.round((data.alertesStock / data.totalProduits) * 100) : 0,
     },
-    { label: "Commandes en cours", value: data.totalCommandes, color: SB.blue, pct: 70 },
+    {
+      label: t('dashboard:stock_status.ongoing_orders'),
+      value: data.totalCommandes,
+      color: "#2E86AB",
+      pct: 70,
+    },
   ];
 
-  // ── Loading ──────────────────────────────────────────────────────────────
+  // Loading State
   if (loading) {
     return (
       <div className="dash-loading">
         <div className="dash-loading__spinner" />
-        <p className="dash-loading__text">Chargement du tableau de bord…</p>
+        <p className="dash-loading__text">{t('dashboard:loading')}</p>
       </div>
     );
   }
 
-  // ── Session expirée ──────────────────────────────────────────────────────
+  // Session Expired
   if (sessionExpired) {
     return (
       <div className="dash-session-expired">
         <div className="session-expired-card">
-          <LuTriangleAlert size={48} color={SB.red} />
-          <h2>Session expirée</h2>
-          <p>Votre session a expiré. Vous allez être redirigé vers la page de connexion.</p>
+          <LuTriangleAlert size={48} color="#E05A5A" />
+          <h2>{t('dashboard:session_expired.title')}</h2>
+          <p>{t('dashboard:session_expired.message')}</p>
           <div className="redirect-spinner" />
         </div>
       </div>
     );
   }
 
-  // ── Rendu principal ──────────────────────────────────────────────────────
+  // Main Render
   return (
     <div className="dashboard-content">
       {error && (
@@ -367,12 +396,12 @@ export default function Dashboard() {
 
       {/* KPI Grid */}
       <div className="kpi-grid">
-        {kpis.map((card) => (
-          <KpiCard key={card.title} {...card} />
+        {kpis.map((card, index) => (
+          <KpiCard key={index} {...card} />
         ))}
       </div>
 
-      {/* CA Chart Card */}
+      {/* Chiffre d'affaires Chart */}
       <div className="chart-card">
         <div className="chart-card__glow-top" />
         <div className="chart-card__glow-bottom" />
@@ -381,15 +410,15 @@ export default function Dashboard() {
           <div className="chart-card__title-group">
             <div className="chart-card__dot-row">
               <div className="chart-card__dot" />
-              <span className="chart-card__label">Chiffre d'affaires</span>
+              <span className="chart-card__label">{t('dashboard:chart.revenue')}</span>
             </div>
             <span className="chart-card__subtitle">
-              Revenus journaliers — {caData.mois}
+              {t('dashboard:chart.daily_revenue', { month: caData.mois || 'Ce mois' })}
             </span>
           </div>
           <div className="chart-card__live-badge">
             <LuActivity size={14} />
-            Live
+            {t('dashboard:chart.live')}
           </div>
         </div>
 
@@ -397,13 +426,13 @@ export default function Dashboard() {
           <span className="chart-card__amount-value">
             {caData.totalMois.toLocaleString("fr-FR")}
           </span>
-          <span className="chart-card__amount-unit">Ar</span>
+          <span className="chart-card__amount-unit"> Ar</span>
           <div className="chart-card__stats-row">
             <span className="chart-card__stat">
-              ↑ Max {fmtAr(Math.max(...caData.jours.map((d) => d.ca), 1))} Ar
+              ↑ {t('dashboard:chart.max')} {Math.max(...caData.jours.map((d) => d.ca), 0).toLocaleString("fr-FR")} Ar
             </span>
             <span className="chart-card__stat">
-              ~ Moy {fmtAr(Math.round(caData.totalMois / Math.max(caData.jours.length, 1)))} Ar
+              ~ {t('dashboard:chart.avg')} {Math.round(caData.totalMois / Math.max(caData.jours.length, 1)).toLocaleString("fr-FR")} Ar
             </span>
           </div>
         </div>
@@ -411,26 +440,28 @@ export default function Dashboard() {
         <CaLineChart jours={caData.jours} />
       </div>
 
-      {/* Bottom row */}
+      {/* Bottom Row */}
       <div className="bottom-row">
-        {/* Revenus hebdo */}
+        {/* Revenus Hebdomadaires */}
         <div className="bottom-card">
-          <div className="bottom-card__title">Revenus hebdomadaires</div>
+          <div className="bottom-card__title">{t('dashboard:weekly_revenue.title')}</div>
           <div className="hebdo-card__amount">
             {data.revenusHebdo.toLocaleString("fr-FR")}
-            <span className="hebdo-card__amount-unit">Ar</span>
+            <span className="hebdo-card__amount-unit"> Ar</span>
           </div>
           <div className="hebdo-card__bar-track">
             <div className="hebdo-card__bar-fill" style={{ width: '65%' }} />
           </div>
-          <div className="hebdo-card__caption">65% de l'objectif mensuel</div>
+          <div className="hebdo-card__caption">{t('dashboard:weekly_revenue.goal')}</div>
         </div>
 
-        {/* Stock status */}
+        {/* Statut du Stock */}
         <div className="bottom-card">
-          <div className="bottom-card__title stock-card__title">Statut du stock</div>
-          {stockItems.map((item) => (
-            <div key={item.label} className="stock-item">
+          <div className="bottom-card__title stock-card__title">
+            {t('dashboard:stock_status.title')}
+          </div>
+          {stockItems.map((item, index) => (
+            <div key={index} className="stock-item">
               <div className="stock-item__row">
                 <span className="stock-item__label">{item.label}</span>
                 <span className="stock-item__value" style={{ color: item.color }}>
@@ -440,7 +471,10 @@ export default function Dashboard() {
               <div className="stock-item__bar-track">
                 <div
                   className="stock-item__bar-fill"
-                  style={{ width: `${Math.min(item.pct, 100)}%`, background: item.color }}
+                  style={{ 
+                    width: `${Math.min(item.pct, 100)}%`, 
+                    background: item.color 
+                  }}
                 />
               </div>
             </div>

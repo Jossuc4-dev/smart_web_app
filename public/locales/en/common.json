@@ -1,0 +1,13 @@
+{
+  "language": {
+    "fr": "Français",
+    "en": "English",
+    "mg": "Malagasy"
+  },
+  "save": "Enregistrer",
+  "cancel": "Annuler",
+  "close": "Fermer",
+  "unit": {
+    "ariary": "Ar"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "title": "Dashboard",
+  "loading": "Loading dashboard…",
+  "error": "Unable to load data. Using demo data.",
+  "session_expired": {
+    "title": "Session expired",
+    "message": "Your session has expired. You will be redirected to the login page."
+  },
+  "warning": {
+    "demo_data": "Demo data used"
+  },
+  "kpi": {
+    "sales_today": "Today's sales",
+    "orders": "Orders",
+    "products_in_stock": "Products in stock",
+    "stock_alerts": "Stock alerts"
+  },
+  "chart": {
+    "revenue": "Revenue",
+    "daily_revenue": "Daily revenue — {{month}}",
+    "live": "Live",
+    "max": "Max",
+    "avg": "Avg",
+    "unit": "Ar"
+  },
+  "weekly_revenue": {
+    "title": "Weekly revenue",
+    "goal": "65% of monthly target"
+  },
+  "stock_status": {
+    "title": "Stock status",
+    "active_products": "Active products",
+    "critical_alerts": "Critical alerts",
+    "ongoing_orders": "Ongoing orders"
+  },
+  "variation": {
+    "all_good": "All good"
+  }
+}

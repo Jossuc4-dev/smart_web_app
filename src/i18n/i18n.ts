@@ -12,7 +12,7 @@ i18n
         supportedLngs: ['fr', 'en', 'mg'],     // langues supportées
 
         defaultNS: 'common',
-        ns: ['common', 'error', 'formation', 'auth', 'stock', 'rh', 'sidebar'],
+        ns: ['common', 'error', 'formation', 'auth', 'stock', 'rh', 'sidebar', 'dashboard', 'sales', 'finance', 'reports', 'help', 'subscriptions'],
 
         backend: {
             loadPath: '/locales/{{lng}}/{{ns}}.json',   // chemin public

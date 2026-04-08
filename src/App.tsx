@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import './App.css';
 import { Provider } from "react-redux";
 import { store } from "./redux/store";
-import {AuthProvider} from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/route/ProtectedRoute";
 import { PublicRoute } from "./components/route/PublicRoute";
 import Layout from "./components/Layout/Layout";
@@ -38,286 +38,307 @@ import ProfessionScreen from "./pages/rh/profession";
 import EntrepotsScreen from "./pages/stock/entrepot";
 import EntrepotAdd from "./pages/stock/entrepot/ajout";
 import ProfilePage from "./pages/rh/profil";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import LandingPage from "./pages/landing";
+import Register from "./pages/landing/register";
 
 function App() {
   return (
     <Provider store={store}>
       <Router>
         <AuthProvider>
-          <Routes>
-            {/* Route publique - sans layout */}
-            <Route
-              path="/"
-              element={
-                <PublicRoute>
-                  <AuthScreen />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/forgot-password"
-              element={
-                <PublicRoute>
-                  <ForgotPassword />
-                </PublicRoute>
-              }
-            />
-             <Route
-              path="/reset-password"
-              element={
-                <PublicRoute>
-                  <ResetPassword />
-                </PublicRoute>
-              }
-            />
-
-            {/* Routes protégées avec Layout */}
-            <Route element={<Layout />}>
+          <LanguageProvider>
+            <Routes>
+              {/* Route publique - sans layout */}
               <Route
-                path="/dashboard"
+                path="/"
                 element={
-                  <ProtectedRoute>
-                    <DashboardScreen />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/stock"
-                element={
-                  <ProtectedRoute>
-                    <StockScreen />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/stock/:id"
-                element={
-                  <ProtectedRoute>
-                    <ProductDetailScreen />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/stock/add"
-                element={
-                  <ProtectedRoute requiredRole="ADMIN">
-                    <AddProductScreen />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/stock/entrepots"
-                element={
-                  <ProtectedRoute requiredRole="ADMIN">
-                    <EntrepotsScreen />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/stock/entrepots/add"
-                element={
-                  <ProtectedRoute requiredRole="ADMIN">
-                    <EntrepotAdd />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/stock/update/:id"
-                element={
-                  <ProtectedRoute requiredRole="ADMIN">
-                    <UpdateProductScreen />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/stock/reapprovisionner/:id"
-                element={
-                  <ProtectedRoute requiredRole="ADMIN">
-                    <ReapprovisionnerScreen />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/finance"
-                element={
-                  <ProtectedRoute>
-                    <FinanceScreen />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/finance/wallet"
-                element={
-                  <ProtectedRoute>
-                    <Wallet />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/report"
-                element={
-                  <ProtectedRoute>
-                    <ReportPage />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/vente"
-                element={
-                  <ProtectedRoute>
-                    <VenteScreen />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path='/ventes'
-                element={
-                  <ProtectedRoute>
-                    <VenteScreen />
-                  </ProtectedRoute>
+                  <PublicRoute>
+                    <LandingPage />
+                  </PublicRoute>
                 }
               />
               <Route
-                path='/ventes/add'
+                path="/login"
                 element={
-                  <ProtectedRoute>
-                    <SelectProductsScreen />
-                  </ProtectedRoute>
+                  <PublicRoute>
+                    <AuthScreen />
+                  </PublicRoute>
+                }
+              />
+               <Route
+                path="/register"
+                element={
+                  <PublicRoute>
+                    <Register />
+                  </PublicRoute>
                 }
               />
               <Route
-                path='/ventes/add/:id'
+                path="/forgot-password"
                 element={
-                  <ProtectedRoute>
-                    <AddCommandeForm />
-                  </ProtectedRoute>
+                  <PublicRoute>
+                    <ForgotPassword />
+                  </PublicRoute>
                 }
               />
-
               <Route
-                path='/profil'
+                path="/reset-password"
                 element={
-                  <ProtectedRoute>
-                    <ProfileStaff />
-                  </ProtectedRoute>
+                  <PublicRoute>
+                    <ResetPassword />
+                  </PublicRoute>
                 }
               />
 
-              <Route
-                path="/rh"
-                element={
-                  <ProtectedRoute requiredRole="ADMIN">
-                    <RHScreen />
-                  </ProtectedRoute>
-                }
-              />
+              {/* Routes protégées avec Layout */}
+              <Route element={<Layout />}>
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <DashboardScreen />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/rh/:id"
-                element={
-                  <ProtectedRoute>
-                    <UserDetailScreen />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/stock"
+                  element={
+                    <ProtectedRoute>
+                      <StockScreen />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/rh/add"
-                element={
-                  <ProtectedRoute requiredRole="ADMIN">
-                    <AddUserScreen />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/stock/:id"
+                  element={
+                    <ProtectedRoute>
+                      <ProductDetailScreen />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/rh/update/:id"
-                element={
-                  <ProtectedRoute requiredRole="ADMIN">
-                    <UpdateUserScreen />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/stock/add"
+                  element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <AddProductScreen />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/rh/profession/"
-                element={
-                  <ProtectedRoute requiredRole="ADMIN">
-                    <ProfessionScreen />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/stock/entrepots"
+                  element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <EntrepotsScreen />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/profile/:id"
-                element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/stock/entrepots/add"
+                  element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <EntrepotAdd />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/subscriptions"
-                element={
-                  <ProtectedRoute requiredRole="ADMIN">
-                    <AbonnementsScreen />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/stock/update/:id"
+                  element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <UpdateProductScreen />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/subscriptions/add/:id"
-                element={
-                  <ProtectedRoute requiredRole="ADMIN">
-                    <SubscribeScreen />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/stock/reapprovisionner/:id"
+                  element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <ReapprovisionnerScreen />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/aide/"
-                element={
-                  <ProtectedRoute>
-                    <HelpScreen />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/finance"
+                  element={
+                    <ProtectedRoute>
+                      <FinanceScreen />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route
-                path="/formation"
-                element={
-                  <ProtectedRoute>
-                    <FormationPage />
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/finance/wallet"
+                  element={
+                    <ProtectedRoute>
+                      <Wallet />
+                    </ProtectedRoute>
+                  }
+                />
 
-              <Route 
-                path="/formation/:id"
-                element={
-                  <ProtectedRoute>
-                    <DetailedFormationPage/>
-                  </ProtectedRoute>
-                }
-              />
+                <Route
+                  path="/report"
+                  element={
+                    <ProtectedRoute>
+                      <ReportPage />
+                    </ProtectedRoute>
+                  }
+                />
 
-            </Route>
-            {/* Redirection 404 */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+                <Route
+                  path="/vente"
+                  element={
+                    <ProtectedRoute>
+                      <VenteScreen />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path='/ventes'
+                  element={
+                    <ProtectedRoute>
+                      <VenteScreen />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/ventes/add'
+                  element={
+                    <ProtectedRoute>
+                      <SelectProductsScreen />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path='/ventes/add/:id'
+                  element={
+                    <ProtectedRoute>
+                      <AddCommandeForm />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path='/profil'
+                  element={
+                    <ProtectedRoute>
+                      <ProfileStaff />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/rh"
+                  element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <RHScreen />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/rh/:id"
+                  element={
+                    <ProtectedRoute>
+                      <UserDetailScreen />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/rh/add"
+                  element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <AddUserScreen />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/rh/update/:id"
+                  element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <UpdateUserScreen />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/rh/profession/"
+                  element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <ProfessionScreen />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/profile/:id"
+                  element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/subscriptions"
+                  element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <AbonnementsScreen />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/subscriptions/add/:id"
+                  element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <SubscribeScreen />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/aide/"
+                  element={
+                    <ProtectedRoute>
+                      <HelpScreen />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/formation"
+                  element={
+                    <ProtectedRoute>
+                      <FormationPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/formation/:id"
+                  element={
+                    <ProtectedRoute>
+                      <DetailedFormationPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+              </Route>
+              {/* Redirection 404 */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </LanguageProvider>
         </AuthProvider>
       </Router>
     </Provider>

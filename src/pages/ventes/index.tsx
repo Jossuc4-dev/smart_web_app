@@ -13,14 +13,10 @@ import {
 } from '../../redux/slices/venteSlice';
 import { 
   selectAllCommands, 
-  selectPaidCommands, 
-  selectPendingCommands,
-  selectCreditCommands,
   selectCommandsLoading,
   selectValidateStatus,
   selectDeleteStatus,
   selectCommandsError,
-  selectCommandsStats
 } from '../../redux/selectors/vente.selector';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
@@ -43,9 +39,16 @@ import {
   FaUser,
   FaCalendarAlt,
   FaBox,
+  FaInfoCircle as FaInfoCircleSolid,
+  FaEnvelope,
+  FaPhone,
+  FaTag,
+  FaBarcode,
+  FaMoneyBillWave,
+  FaReceipt,
+  FaBuilding,
+  FaCalendarCheck
 } from 'react-icons/fa';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import './index.css';
 import type { CommandeResponse, detailledClient } from '../../models/interfaces';
 import { generateInvoicePdf, generateMultiplePdf } from '../../pdf/pdfFacture';
@@ -54,7 +57,12 @@ type FilterType = 'all' | 'paid' | 'pending' | 'credit';
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('fr-FR');
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+const formatDateTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
 export default function VentesScreen() {
@@ -64,15 +72,11 @@ export default function VentesScreen() {
   const { token, logout } = useAuth();
 
   const allCommands = useAppSelector(selectAllCommands) || [];
-  const paidCommands = useAppSelector(selectPaidCommands) || [];
-  const pendingCommands = useAppSelector(selectPendingCommands) || [];
-  const creditCommands = useAppSelector(selectCreditCommands) || [];
   const clients = useAppSelector(state => state.vente.clients) || [];
   const loading = useAppSelector(selectCommandsLoading);
   const validateStatus = useAppSelector(selectValidateStatus);
   const deleteStatus = useAppSelector(selectDeleteStatus);
   const error = useAppSelector(selectCommandsError);
-  const stats = useAppSelector(selectCommandsStats);
   const sessionExpired = useAppSelector(state => state.vente.sessionExpired);
 
   const [searchValue, setSearchValue] = useState('');
@@ -86,6 +90,8 @@ export default function VentesScreen() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
+  const [selectedCommandDetails, setSelectedCommandDetails] = useState<CommandeResponse | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   useEffect(() => {
     if (token && !sessionExpired) {
@@ -129,6 +135,13 @@ export default function VentesScreen() {
     }
   };
 
+  const handleRowClick = (command: CommandeResponse) => {
+    if (!sessionExpired) {
+      setSelectedCommandDetails(command);
+      setShowDetailsModal(true);
+    }
+  };
+
   const filteredCommands = useMemo(() => {
     let list = [...allCommands];
     switch (activeFilter) {
@@ -139,29 +152,28 @@ export default function VentesScreen() {
     if (searchValue.trim()) {
       const term = searchValue.toLowerCase().trim();
       list = list.filter(c =>
-        c.client?.nom.toLowerCase().includes(term) ||
+        c.client?.nom?.toLowerCase().includes(term) ||
         c.reference?.toLowerCase().includes(term) ||
-        c.produit?.nom.toLowerCase().includes(term)
+        c.produit?.nom?.toLowerCase().includes(term)
       );
     }
     return list;
   }, [allCommands, activeFilter, searchValue]);
 
-  // ── Stats + meilleur client ────────────────────────────────────────────────
+  // Stats
   const calculatedStats = useMemo(() => {
-    const total        = allCommands.length;
-    const paid         = allCommands.filter(c => c.valide && c.factures?.every(f => f.payed)).length;
-    const pending      = allCommands.filter(c => !c.valide || c.factures?.some(f => !f.payed)).length;
-    const credit       = allCommands.filter(c => c.typePaiement === 'CREDIT').length;
-    const totalAmount  = allCommands.reduce((s, c) => s + (c.quantite * c.produit?.prixVente || 0), 0);
-    const paidAmount   = allCommands.filter(c => c.valide && c.factures?.every(f => f.payed))
-                                    .reduce((s, c) => s + (c.quantite * c.produit?.prixVente || 0), 0);
-    const pendingAmount= allCommands.filter(c => !c.valide || c.factures?.some(f => !f.payed))
-                                    .reduce((s, c) => s + (c.quantite * c.produit?.prixVente || 0), 0);
+    const total = allCommands.length;
+    const paid = allCommands.filter(c => c.valide && c.factures?.every(f => f.payed)).length;
+    const pending = allCommands.filter(c => !c.valide || c.factures?.some(f => !f.payed)).length;
+    const credit = allCommands.filter(c => c.typePaiement === 'CREDIT').length;
+    const totalAmount = allCommands.reduce((s, c) => s + (c.quantite * c.produit?.prixVente || 0), 0);
+    const paidAmount = allCommands.filter(c => c.valide && c.factures?.every(f => f.payed))
+      .reduce((s, c) => s + (c.quantite * c.produit?.prixVente || 0), 0);
+    const pendingAmount = allCommands.filter(c => !c.valide || c.factures?.some(f => !f.payed))
+      .reduce((s, c) => s + (c.quantite * c.produit?.prixVente || 0), 0);
     const creditAmount = allCommands.filter(c => c.typePaiement === 'CREDIT')
-                                    .reduce((s, c) => s + (c.quantite * c.produit?.prixVente || 0), 0);
+      .reduce((s, c) => s + (c.quantite * c.produit?.prixVente || 0), 0);
 
-    // Meilleur client : additionner les montants par client
     const clientTotals: Record<string, { nom: string; total: number; count: number }> = {};
     for (const cmd of allCommands) {
       const nom = cmd.client?.nom;
@@ -235,24 +247,24 @@ export default function VentesScreen() {
 
   const getPaymentTypeLabel = (type: string): string => {
     switch (type) {
-      case 'CASH':         return 'Espèces';
-      case 'CARTE':        return 'Carte';
+      case 'CASH': return 'Espèces';
+      case 'CARTE': return 'Carte';
       case 'MOBILE_MONEY': return 'Mobile Money';
-      case 'CREDIT':       return 'Crédit';
-      default:             return type;
+      case 'CREDIT': return 'Crédit';
+      default: return type;
     }
   };
 
   const getStatusClass = (command: CommandeResponse): string => {
     if (command.valide && command.factures?.every(f => f.payed)) return 'status-paid';
-    if (command.typePaiement === 'CREDIT' && !command.valide)    return 'status-credit';
+    if (command.typePaiement === 'CREDIT' && !command.valide) return 'status-credit';
     if (!command.valide) return 'status-pending';
     return '';
   };
 
   const getStatusText = (command: CommandeResponse): string => {
     if (command.valide && command.factures?.every(f => f.payed)) return 'Payé';
-    if (command.typePaiement === 'CREDIT' && !command.valide)    return 'Crédit';
+    if (command.typePaiement === 'CREDIT' && !command.valide) return 'Crédit';
     if (!command.valide) return 'En attente';
     return 'Partiel';
   };
@@ -326,7 +338,7 @@ export default function VentesScreen() {
         </div>
       )}
 
-      {/* ── Indicateurs ──────────────────────────────────────────── */}
+      {/* Stats */}
       <div className="stats-grid">
         <div className={`stat-card total ${activeFilter === 'all' ? 'active' : ''} ${sessionExpired ? 'disabled' : ''}`}
           onClick={() => !sessionExpired && setActiveFilter('all')}>
@@ -365,7 +377,6 @@ export default function VentesScreen() {
           <div className="stat-label">CA total</div>
         </div>
 
-        {/* ── Meilleur client ── */}
         <div className="stat-card best-client">
           <FaStar className="stat-icon" />
           {calculatedStats.bestClient ? (
@@ -383,7 +394,7 @@ export default function VentesScreen() {
         </div>
       </div>
 
-      {/* ── Recherche & filtres ───────────────────────────────────── */}
+      {/* Search & filters */}
       <div className="search-filter">
         <div className="search-wrapper">
           <FaSearch className="search-icon" />
@@ -399,14 +410,14 @@ export default function VentesScreen() {
         </div>
 
         <div className="filter-buttons">
-          <button className={`filter-btn ${activeFilter === 'all'     ? 'active' : ''}`} onClick={() => !sessionExpired && setActiveFilter('all')}     disabled={sessionExpired}>Tous ({calculatedStats.total})</button>
-          <button className={`filter-btn ${activeFilter === 'paid'    ? 'active' : ''}`} onClick={() => !sessionExpired && setActiveFilter('paid')}    disabled={sessionExpired}>Payées ({calculatedStats.paid})</button>
+          <button className={`filter-btn ${activeFilter === 'all' ? 'active' : ''}`} onClick={() => !sessionExpired && setActiveFilter('all')} disabled={sessionExpired}>Tous ({calculatedStats.total})</button>
+          <button className={`filter-btn ${activeFilter === 'paid' ? 'active' : ''}`} onClick={() => !sessionExpired && setActiveFilter('paid')} disabled={sessionExpired}>Payées ({calculatedStats.paid})</button>
           <button className={`filter-btn ${activeFilter === 'pending' ? 'active' : ''}`} onClick={() => !sessionExpired && setActiveFilter('pending')} disabled={sessionExpired}>En attente ({calculatedStats.pending})</button>
-          <button className={`filter-btn ${activeFilter === 'credit'  ? 'active' : ''}`} onClick={() => !sessionExpired && setActiveFilter('credit')}  disabled={sessionExpired}>À crédit ({calculatedStats.credit})</button>
+          <button className={`filter-btn ${activeFilter === 'credit' ? 'active' : ''}`} onClick={() => !sessionExpired && setActiveFilter('credit')} disabled={sessionExpired}>À crédit ({calculatedStats.credit})</button>
         </div>
       </div>
 
-      {/* ── Liste des ventes (lignes) ─────────────────────────────── */}
+      {/* Liste des commandes */}
       <div className="commands-section">
         <div className="section-header">
           <h2 className="section-title">Commandes</h2>
@@ -419,102 +430,72 @@ export default function VentesScreen() {
           )}
         </div>
 
-        {/* En-tête colonnes */}
         {filteredCommands.length > 0 && (
           <div className="commands-list-header">
             <span className="col-check" />
             <span className="col-ref">Référence</span>
             <span className="col-client">Client</span>
             <span className="col-product">Produit</span>
-            <span className="col-qty">Qté</span>
             <span className="col-amount">Montant</span>
-            <span className="col-payment">Paiement</span>
             <span className="col-date">Date</span>
             <span className="col-status">Statut</span>
-            <span className="col-actions">Actions</span>
           </div>
         )}
 
-        {/* Lignes scrollables */}
         <div className="commands-list">
           {filteredCommands.map(command => {
-            const isSelected  = selectedCommands.has(command.id);
+            const isSelected = selectedCommands.has(command.id);
             const statusClass = getStatusClass(command);
-            const statusText  = getStatusText(command);
+            const statusText = getStatusText(command);
 
             return (
               <div
                 key={command.id}
                 className={`command-row ${statusClass} ${isSelected ? 'selected' : ''} ${sessionExpired ? 'disabled' : ''}`}
+                onClick={() => handleRowClick(command)}
               >
-                {/* Checkbox */}
-                <span className="col-check">
+                <span className="col-check" onClick={(e) => e.stopPropagation()}>
                   <button className="checkbox-btn" onClick={() => !sessionExpired && toggleSelectCommand(command.id)} disabled={sessionExpired}>
                     {isSelected ? <FaCheckSquare /> : <FaRegSquare />}
                   </button>
                 </span>
 
-                {/* Référence */}
                 <span className="col-ref">
                   <span className="row-ref-badge">{command.reference}</span>
                 </span>
 
-                {/* Client */}
                 <span className="col-client row-client">
                   <FaUser className="row-col-icon" />
-                  {command.client.nom}
+                  {command.client?.nom || 'Client inconnu'}
                 </span>
 
-                {/* Produit */}
-                <span className="col-product row-product" title={command.produit.nom}>
+                <span className="col-product row-product" title={command.produit?.nom || 'Produit inconnu'}>
                   <FaBox className="row-col-icon" />
-                  {command.produit.nom.length > 28 ? command.produit.nom.substring(0, 28) + '…' : command.produit.nom}
+                  {command.produit?.nom
+                    ? (command.produit.nom.length > 28 ? command.produit.nom.substring(0, 28) + '…' : command.produit.nom)
+                    : 'Produit inconnu'}
                 </span>
 
-                {/* Quantité */}
-                <span className="col-qty">
-                  <span className="row-qty-badge">×{command.quantite}</span>
-                </span>
-
-                {/* Montant */}
                 <span className="col-amount row-amount">
-                  {(command.quantite * command.produit.prixVente).toLocaleString()} Ar
+                  {((command.quantite || 0) * (command.produit?.prixVente || 0)).toLocaleString()} Ar
                 </span>
 
-                {/* Type paiement */}
-                <span className="col-payment">
-                  <span className="row-payment-badge">{getPaymentTypeLabel(command.typePaiement)}</span>
-                </span>
-
-                {/* Date */}
                 <span className="col-date row-date">
                   <FaCalendarAlt className="row-col-icon" />
                   {formatDate(command.date)}
                 </span>
 
-                {/* Statut */}
                 <span className="col-status">
                   <span className={`command-status ${statusClass}`}>{statusText}</span>
                 </span>
 
-                {/* Actions */}
-                <span className="col-actions row-actions">
+                <span className="col-actions row-actions" onClick={(e) => e.stopPropagation()}>
                   {!command.valide && (
                     <button className="validate-btn row-action-btn" onClick={() => !sessionExpired && setShowValidateModal(command.id)}
                       title="Valider" disabled={validateStatus === 'loading' || sessionExpired}>
                       <FaCheck />
                     </button>
                   )}
-                  <button className="pdf-btn-small row-action-btn"
-                    onClick={() => generateInvoicePdf(command, () => { setErrorMessage('Erreur PDF.'); setShowErrorModal(true); })}
-                    title="Facture PDF" disabled={sessionExpired}>
-                    <FaFilePdf />
-                  </button>
-                  <button className="delete-btn row-action-btn"
-                    onClick={() => !sessionExpired && setShowDeleteModal(command.id)}
-                    title="Supprimer" disabled={deleteStatus === 'loading' || sessionExpired}>
-                    <FaTrash />
-                  </button>
                 </span>
               </div>
             );
@@ -538,11 +519,10 @@ export default function VentesScreen() {
         </div>
       </div>
 
-      {/* ── Clients récents (scrollable) ──────────────────────────── */}
+      {/* Clients récents */}
       <div className="clients-section">
         <h2 className="section-title">Clients récents</h2>
         <div className="clients-list">
-          {/* En-tête */}
           {clients.length > 0 && (
             <div className="clients-list-header">
               <span className="ccol-name">Nom</span>
@@ -552,7 +532,6 @@ export default function VentesScreen() {
               <span className="ccol-total">Total achats</span>
             </div>
           )}
-          {/* Lignes */}
           <div className="clients-list-body">
             {clients.map((client: detailledClient) => {
               const totalClient = (client.commandes || []).reduce(
@@ -614,6 +593,169 @@ export default function VentesScreen() {
               <button className="cancel-btn" onClick={() => setShowValidateModal(null)}>Annuler</button>
               <button className="confirm-btn" onClick={() => handleValidate(showValidateModal)} disabled={validateStatus === 'loading'}>
                 {validateStatus === 'loading' ? <><div className="spinner-small" /> Validation...</> : 'Valider'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Détails Commande - Version améliorée */}
+      {showDetailsModal && selectedCommandDetails && !sessionExpired && (
+        <div className="modal-overlay" onClick={() => setShowDetailsModal(false)}>
+          <div className="modal details-modal" onClick={e => e.stopPropagation()}>
+            <div className="details-modal-header">
+              <h3>
+                <div className="header-icon">
+                  <FaReceipt />
+                </div>
+                Détails de la commande
+              </h3>
+            </div>
+
+            <div className="details-modal-body">
+              {/* Grille d'informations */}
+              <div className="details-grid">
+                {/* Carte Informations générales */}
+                <div className="details-card">
+                  <div className="details-card-title">
+                    <FaInfoCircleSolid />
+                    Général
+                  </div>
+                  <div className="details-card-content">
+                    <div className="details-info-row">
+                      <span className="details-info-label">Référence :</span>
+                      <span className="details-info-value"><FaTag className="row-col-icon" style={{ marginRight: 4 }} /> {selectedCommandDetails.reference}</span>
+                    </div>
+                    <div className="details-info-row">
+                      <span className="details-info-label">Date :</span>
+                      <span className="details-info-value"><FaCalendarAlt className="row-col-icon" style={{ marginRight: 4 }} /> {formatDateTime(selectedCommandDetails.date)}</span>
+                    </div>
+                    <div className="details-info-row">
+                      <span className="details-info-label">Statut :</span>
+                      <span className={`status-badge-large ${getStatusClass(selectedCommandDetails)}`}>
+                        {getStatusText(selectedCommandDetails)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Carte Client */}
+                <div className="details-card">
+                  <div className="details-card-title">
+                    <FaUser />
+                    Client
+                  </div>
+                  <div className="details-card-content">
+                    <div className="details-info-row">
+                      <span className="details-info-label">Nom :</span>
+                      <span className="details-info-value"><strong>{selectedCommandDetails.client?.nom || 'Client inconnu'}</strong></span>
+                    </div>
+                    {selectedCommandDetails.client?.email && (
+                      <div className="details-info-row">
+                        <span className="details-info-label"><FaEnvelope className="row-col-icon" /> Email :</span>
+                        <span className="details-info-value">{selectedCommandDetails.client.email}</span>
+                      </div>
+                    )}
+                    {selectedCommandDetails.client?.telephone && (
+                      <div className="details-info-row">
+                        <span className="details-info-label"><FaPhone className="row-col-icon" /> Téléphone :</span>
+                        <span className="details-info-value">{selectedCommandDetails.client.telephone}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Carte Produit - Pleine largeur si nécessaire */}
+                <div className="details-card full-width">
+                  <div className="details-card-title">
+                    <FaBox />
+                    Produit
+                  </div>
+                  <div className="details-card-content">
+                    <div className="details-info-row">
+                      <span className="details-info-label">Nom :</span>
+                      <span className="details-info-value"><strong>{selectedCommandDetails.produit?.nom || 'Produit inconnu'}</strong></span>
+                    </div>
+                    <div className="details-info-row">
+                      <span className="details-info-label"><FaBarcode className="row-col-icon" /> Référence :</span>
+                      <span className="details-info-value">{selectedCommandDetails.produit?.numero || 'N/A'}</span>
+                    </div>
+                    <div className="details-info-row">
+                      <span className="details-info-label"><FaBuilding className="row-col-icon" /> Type :</span>
+                      <span className="details-info-value">{selectedCommandDetails.produit?.type || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Carte Informations financières */}
+                <div className="details-card full-width">
+                  <div className="details-card-title">
+                    <FaMoneyBillWave />
+                    Informations financières
+                  </div>
+                  <div className="details-card-content">
+                    <div className="details-info-row">
+                      <span className="details-info-label">Quantité :</span>
+                      <span className="details-info-value">{selectedCommandDetails.quantite} unité(s)</span>
+                    </div>
+                    <div className="details-info-row">
+                      <span className="details-info-label">Prix unitaire :</span>
+                      <span className="details-info-value">{selectedCommandDetails.produit?.prixVente?.toLocaleString() || 0} Ar</span>
+                    </div>
+                    <div className="details-info-row">
+                      <span className="details-info-label">Montant total :</span>
+                      <span className="details-info-value highlight">
+                        {((selectedCommandDetails.quantite || 0) * (selectedCommandDetails.produit?.prixVente || 0)).toLocaleString()} Ar
+                      </span>
+                    </div>
+                    <div className="details-info-row">
+                      <span className="details-info-label">Type de paiement :</span>
+                      <span className="details-info-value">
+                        <span className="payment-badge">{getPaymentTypeLabel(selectedCommandDetails.typePaiement)}</span>
+                      </span>
+                    </div>
+                    <div className="details-info-row">
+                      <span className="details-info-label"><FaCalendarCheck className="row-col-icon" /> Date d'échéance :</span>
+                      <span className="details-info-value">{formatDate(selectedCommandDetails.datePaiement)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Factures */}
+                {selectedCommandDetails.factures && selectedCommandDetails.factures.length > 0 && (
+                  <div className="details-card full-width">
+                    <div className="details-card-title">
+                      <FaFilePdf />
+                      Factures
+                    </div>
+                    <div className="details-card-content">
+                      {selectedCommandDetails.factures.map((facture, idx) => (
+                        <div key={idx} className="facture-item">
+                          <span className="facture-numero">{facture.numero}</span>
+                          <span className={`facture-status ${facture.payed ? 'payed' : 'unpaid'}`}>
+                            {facture.payed ? 'Payée' : 'Non payée'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="details-modal-footer">
+              <button className="pdf-btn-small row-action-btn"
+                    onClick={() => generateInvoicePdf(selectedCommandDetails, () => { setErrorMessage('Erreur PDF.'); setShowErrorModal(true); })}
+                    title="Facture PDF" disabled={sessionExpired}>
+                    <FaFilePdf />
+                  </button>
+                  <button className="delete-btn row-action-btn"
+                    onClick={() => !sessionExpired && setShowDeleteModal(selectedCommandDetails.id)}
+                    title="Supprimer" disabled={deleteStatus === 'loading' || sessionExpired}>
+                    <FaTrash />
+                  </button>
+              <button className="close-btn" onClick={() => setShowDetailsModal(false)}>
+                Fermer
               </button>
             </div>
           </div>

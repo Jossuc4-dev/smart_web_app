@@ -1,0 +1,39 @@
+{
+  "title": "Tableau de bord",
+  "loading": "Chargement du tableau de bord…",
+  "error": "Impossible de charger les données. Utilisation des données de démonstration.",
+  "session_expired": {
+    "title": "Session expirée",
+    "message": "Votre session a expiré. Vous allez être redirigé vers la page de connexion."
+  },
+  "warning": {
+    "demo_data": "Données de démonstration utilisées"
+  },
+  "kpi": {
+    "sales_today": "Ventes du jour",
+    "orders": "Commandes",
+    "products_in_stock": "Produits en stock",
+    "stock_alerts": "Alertes stock"
+  },
+  "chart": {
+    "revenue": "Chiffre d'affaires",
+    "daily_revenue": "Revenus journaliers — {{month}}",
+    "live": "Live",
+    "max": "Max",
+    "avg": "Moy",
+    "unit": "Ar"
+  },
+  "weekly_revenue": {
+    "title": "Revenus hebdomadaires",
+    "goal": "65% de l'objectif mensuel"
+  },
+  "stock_status": {
+    "title": "Statut du stock",
+    "active_products": "Produits actifs",
+    "critical_alerts": "Alertes critiques",
+    "ongoing_orders": "Commandes en cours"
+  },
+  "variation": {
+    "all_good": "Tout est OK"
+  }
+}

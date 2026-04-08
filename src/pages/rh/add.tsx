@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
+import {
   FaUserPlus,
   FaArrowLeft,
   FaEnvelope,
@@ -22,15 +22,17 @@ import {
   FaExclamationTriangle,
   FaSave,
   FaTimes,
-  FaChevronDown
+  FaChevronDown,
+  FaMoneyBill
 } from 'react-icons/fa';
 
 import './add.css';
+import BASE_URL from '../../config/ApiConfig';
 
 interface Profession {
   id: number;
   poste: string;
-  salaire: number;
+  reference: string;
 }
 
 export default function AddUserScreen() {
@@ -42,6 +44,7 @@ export default function AddUserScreen() {
   const [email, setEmail] = useState('');
   const [profession, setProfession] = useState('');
   const [salaire, setSalaire] = useState('');
+  const [reference, setReference] = useState('');
   const [mdp, setMdp] = useState('');
   const [confMdp, setConfMdp] = useState('');
   const [cin, setCin] = useState('');
@@ -70,13 +73,12 @@ export default function AddUserScreen() {
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const BASE_URL = 'http://localhost:3000'; // À remplacer par votre config
 
   // Chargement des professions
   useEffect(() => {
     const fetchProfessions = async () => {
       if (!token) return;
-      
+
       try {
         setLoadingProfessions(true);
         const response = await fetch(`${BASE_URL}/rh/profession/`, {
@@ -176,7 +178,7 @@ export default function AddUserScreen() {
         setErrors(prev => ({ ...prev, submit: result.message || "Impossible d'ajouter l'employé" }));
       }
     } catch (err) {
-      setErrors(prev => ({ ...prev, submit: "Erreur lors de la requête" as any}));
+      setErrors(prev => ({ ...prev, submit: "Erreur lors de la requête" as any }));
     } finally {
       setLoading(false);
     }
@@ -247,7 +249,7 @@ export default function AddUserScreen() {
                 Poste / Profession *
               </label>
               <div className="custom-select">
-                <div 
+                <div
                   className={`select-trigger ${touched.profession && errors.profession ? 'error' : ''}`}
                   onClick={() => setShowProfessionsDropdown(!showProfessionsDropdown)}
                 >
@@ -265,12 +267,12 @@ export default function AddUserScreen() {
                           className="dropdown-item"
                           onClick={() => {
                             setProfession(prof.poste);
-                            setSalaire(prof.salaire.toString());
+                            setReference(prof.reference);
                             setShowProfessionsDropdown(false);
                           }}
                         >
                           <strong>{prof.poste}</strong>
-                          <span className="item-salaire">{prof.salaire.toLocaleString()} Ar</span>
+                          <span className="item-salaire">{prof.reference}</span>
                         </div>
                       ))
                     )}
@@ -282,10 +284,10 @@ export default function AddUserScreen() {
               )}
             </div>
 
-            <div className={`form-group ${touched.salaire && errors.salaire ? 'error' : ''}`}>
+            <div className={`form-group ${touched.reference && errors.reference ? 'error' : ''}`}>
               <label>
-                <FaMoneyBillWave className="input-icon" />
-                Salaire mensuel (Ar) *
+                <FaMoneyBill className="input-icon" />
+                Salaire mensuel
               </label>
               <input
                 type="number"
@@ -294,11 +296,7 @@ export default function AddUserScreen() {
                 onChange={(e) => setSalaire(e.target.value)}
                 onBlur={() => handleBlur('salaire')}
                 className={touched.salaire && errors.salaire ? 'error' : ''}
-                readOnly
               />
-              {touched.salaire && errors.salaire && (
-                <span className="error-message">Salaire invalide</span>
-              )}
             </div>
           </div>
         </section>

@@ -1,0 +1,39 @@
+{
+  "title": "Takelaka fifehezana",
+  "loading": "Mametraka ny takelaka fifehezana…",
+  "error": "Tsy afaka naka ny données. Mampiasa données demo.",
+  "session_expired": {
+    "title": "Session tapitra",
+    "message": "Tapitra ny session-nao. Ho alefa any amin'ny pejy hiditra ianao."
+  },
+  "warning": {
+    "demo_data": "Données demo ampiasaina"
+  },
+  "kpi": {
+    "sales_today": "Varotra androany",
+    "orders": "Kaomanda",
+    "products_in_stock": "Vokatra ao anaty stock",
+    "stock_alerts": "Fanamarihana stock"
+  },
+  "chart": {
+    "revenue": "Volan'ny orinasa",
+    "daily_revenue": "Volan'ny andro — {{month}}",
+    "live": "Live",
+    "max": "Max",
+    "avg": "Moy",
+    "unit": "Ar"
+  },
+  "weekly_revenue": {
+    "title": "Volan'ny herinandro",
+    "goal": "65% amin'ny tanjona isam-bolana"
+  },
+  "stock_status": {
+    "title": "Toetran'ny stock",
+    "active_products": "Vokatra mavitrika",
+    "critical_alerts": "Fanamarihana maika",
+    "ongoing_orders": "Kaomanda eo am-pandehanana"
+  },
+  "variation": {
+    "all_good": "Tsara ny zava-drehetra"
+  }
+}

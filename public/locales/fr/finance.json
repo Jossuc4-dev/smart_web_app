@@ -1,0 +1,70 @@
+{
+  "title": "Finances",
+  "loading": "Chargement des finances…",
+  "unauthorized": {
+    "title": "Accès restreint",
+    "message": "Seuls les administrateurs peuvent accéder aux finances."
+  },
+  "export_pdf": "Exporter en PDF",
+  "sections": {
+    "resultat": "Compte de résultat",
+    "bilan": "Bilan comptable",
+    "transactions": "Transactions",
+    "wallet": "Portefeuille"
+  },
+  "overview": {
+    "balance": "Solde compte",
+    "revenue": "Chiffre d'affaires",
+    "net_result": "Résultat net"
+  },
+  "resultat": {
+    "title": "Compte de résultat",
+    "revenue": "Chiffre d'affaires",
+    "gross_margin": "Marge brute",
+    "added_value": "Valeur ajoutée",
+    "ebe": "EBE",
+    "operating_result": "Résultat d'exploitation",
+    "net_result": "Résultat net"
+  },
+  "bilan": {
+    "actif": "Actif",
+    "passif": "Passif",
+    "receivables": "Créances clients",
+    "stocks": "Stocks",
+    "total_actif": "Total Actif",
+    "supplier_debts": "Dettes fournisseurs",
+    "equity": "Capitaux propres",
+    "total_passif": "Total Passif"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "total": "total",
+    "purchase": "Achat",
+    "sale": "Vente",
+    "page": "Page",
+    "no_data": "Aucune transaction disponible"
+  },
+  "wallet": {
+    "current_balance": "Solde actuel",
+    "balance": "Solde",
+    "deposits": "Dépôts cumulés",
+    "withdrawals": "Retraits cumulés",
+    "available_balance": "Solde disponible",
+    "deposit": "Dépôt",
+    "withdrawal": "Retrait",
+    "do_deposit": "Effectuer le dépôt",
+    "do_withdrawal": "Effectuer le retrait",
+    "amount": "Montant (Ar)",
+    "amount_placeholder": "Saisissez le montant",
+    "reason": "Motif",
+    "reason_placeholder": "Saisissez le motif",
+    "available": "Solde disponible",
+    "processing": "Traitement...",
+    "deposit_success": "Dépôt de {{amount}} effectué avec succès",
+    "withdraw_success": "Retrait de {{amount}} effectué avec succès",
+    "insufficient_balance": "Solde insuffisant pour effectuer ce retrait",
+    "balance_evolution": "Évolution du solde",
+    "funds_distribution": "Répartition des fonds",
+    "recent_transactions": "Dernières transactions"
+  }
+}

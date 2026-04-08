@@ -27,6 +27,7 @@ import {
   LuX,
   LuCheck,
 } from "react-icons/lu";
+import { useAuth } from "../../contexts/AuthContext";
 
 // ── Palette Smart Business ────────────────────────────────────────────────────
 const SB = {
@@ -487,6 +488,7 @@ function Toggle({ on, onToggle, label, description, icon: Icon, danger }: {
 // ══════════════════════════════════════════════════════════════════════════════
 export default function ProfilePage() {
   const { get, put, post } = useApi();
+  const {user} = useAuth()
 
   // ── États ─────────────────────────────────────────────────────────────────
   const [profile, setProfile]   = useState<UserProfile | null>(null);
@@ -593,7 +595,7 @@ export default function ProfilePage() {
     if (!profile) return;
     setSaving(true);
     try {
-      await put(`rh/staff/id/${profile.id}`, {
+      await put(`rh/staff/id/${user?.id}`, {
         ...editForm, enfants: parseInt(editForm.enfants, 10),
       });
       await fetchProfile();
@@ -612,7 +614,7 @@ export default function ProfilePage() {
     setSaving(true);
     try {
       await post("rh/conge/demander", {
-        idUser:    profile.id,
+        idUser:    user?.id,
         type:      congeForm.type,
         dateDebut: congeForm.dateDebut,
         dateFin:   congeForm.dateFin,

@@ -86,6 +86,22 @@ export default function AddCommandeForm() {
   );
   const [typePaiement, setTypePaiement] = useState<'CASH' | 'BANK' | 'MOBILE_MONEY' | 'CREDIT'>('CASH');
 
+  // Calcule la date automatique selon le type de paiement
+  const getAutoDate = (type: typeof typePaiement): string => {
+    const today = new Date();
+    if (type === 'BANK') {
+      today.setDate(today.getDate() + 5);
+    }
+    return today.toISOString().split('T')[0];
+  };
+
+  // Date max pour CREDIT : aujourd'hui + 10 jours
+  const maxCreditDate = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 10);
+    return d.toISOString().split('T')[0];
+  })();
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Filtrer les clients selon la recherche
@@ -159,8 +175,14 @@ export default function AddCommandeForm() {
       newErrors.quantite = `Stock insuffisant (${produit?.quantite} disponible${produit?.quantite || 0 > 1 ? 's' : ''})`;
     }
 
-    if (!datePaiement) {
-      newErrors.datePaiement = 'La date de paiement est requise';
+    if (typePaiement === 'CREDIT') {
+      if (!datePaiement) {
+        newErrors.datePaiement = 'La date de paiement est requise';
+      } else if (datePaiement > maxCreditDate) {
+        newErrors.datePaiement = 'La date de paiement ne peut pas dépasser 10 jours';
+      } else if (datePaiement < new Date().toISOString().split('T')[0]) {
+        newErrors.datePaiement = 'La date de paiement ne peut pas être dans le passé';
+      }
     }
 
     setErrors(newErrors);
@@ -172,6 +194,11 @@ export default function AddCommandeForm() {
 
     setSubmitting(true);
     try {
+      // Date calculée automatiquement selon le type (sauf CREDIT)
+      const effectiveDatePaiement = typePaiement === 'CREDIT'
+        ? datePaiement
+        : getAutoDate(typePaiement);
+
       const venteData: CreateVenteRequest = {
         idProduit: Number(id),
         quantite: quantite,
@@ -184,7 +211,7 @@ export default function AddCommandeForm() {
           email: selectedClient!.email,
           telephone: selectedClient!.telephone
         },
-        datePaiement: datePaiement,
+        datePaiement: effectiveDatePaiement,
         typePaiement: typePaiement
       };
 
@@ -536,7 +563,11 @@ export default function AddCommandeForm() {
                 name="typePaiement"
                 value="CASH"
                 checked={typePaiement === 'CASH'}
-                onChange={(e) => setTypePaiement(e.target.value as 'CASH')}
+                onChange={(e) => {
+                  const t = e.target.value as 'CASH';
+                  setTypePaiement(t);
+                  setDatePaiement(getAutoDate(t));
+                }}
               />
               <FaMoneyBillWave className="payment-icon" />
               <span>Espèces</span>
@@ -548,7 +579,11 @@ export default function AddCommandeForm() {
                 name="typePaiement"
                 value="BANK"
                 checked={typePaiement === 'BANK'}
-                onChange={(e) => setTypePaiement(e.target.value as 'BANK')}
+                onChange={(e) => {
+                  const t = e.target.value as 'BANK';
+                  setTypePaiement(t);
+                  setDatePaiement(getAutoDate(t));
+                }}
               />
               <FaCreditCard className="payment-icon" />
               <span>Carte bancaire</span>
@@ -560,7 +595,11 @@ export default function AddCommandeForm() {
                 name="typePaiement"
                 value="MOBILE_MONEY"
                 checked={typePaiement === 'MOBILE_MONEY'}
-                onChange={(e) => setTypePaiement(e.target.value as 'MOBILE_MONEY')}
+                onChange={(e) => {
+                  const t = e.target.value as 'MOBILE_MONEY';
+                  setTypePaiement(t);
+                  setDatePaiement(getAutoDate(t));
+                }}
               />
               <FaMobileAlt className="payment-icon" />
               <span>Mobile Money</span>
@@ -572,7 +611,10 @@ export default function AddCommandeForm() {
                 name="typePaiement"
                 value="CREDIT"
                 checked={typePaiement === 'CREDIT'}
-                onChange={(e) => setTypePaiement(e.target.value as 'CREDIT')}
+                onChange={(e) => {
+                  setTypePaiement('CREDIT');
+                  setDatePaiement(new Date().toISOString().split('T')[0]);
+                }}
               />
               <FaCreditCard className="payment-icon" />
               <span>Crédit</span>
@@ -581,20 +623,35 @@ export default function AddCommandeForm() {
         </div>
 
         {/* Date de paiement */}
-        <div className="form-section">
-          <h3>Date de paiement</h3>
-          <div className="input-wrapper">
-            <FaCalendarAlt className="input-icon" />
-            <input
-              type="date"
-              value={datePaiement}
-              onChange={(e) => setDatePaiement(e.target.value)}
-              className={`text-input ${errors.datePaiement ? 'error' : ''}`}
-              min={new Date().toISOString().split('T')[0]}
-            />
+        {typePaiement === 'CREDIT' ? (
+          <div className="form-section">
+            <h3>Date de paiement <span style={{ fontSize: '0.8em', fontWeight: 400, color: 'var(--color-text-secondary)' }}>(max 10 jours)</span></h3>
+            <div className="input-wrapper">
+              <FaCalendarAlt className="input-icon" />
+              <input
+                type="date"
+                value={datePaiement}
+                onChange={(e) => setDatePaiement(e.target.value)}
+                className={`text-input ${errors.datePaiement ? 'error' : ''}`}
+                min={new Date().toISOString().split('T')[0]}
+                max={maxCreditDate}
+              />
+            </div>
+            {errors.datePaiement && <span className="error-message">{errors.datePaiement}</span>}
           </div>
-          {errors.datePaiement && <span className="error-message">{errors.datePaiement}</span>}
-        </div>
+        ) : (
+          <div className="form-section">
+            <div className="payment-date-info">
+              <FaCalendarAlt style={{ marginRight: 8, opacity: 0.6 }} />
+              <span>
+                {typePaiement === 'CASH' || typePaiement === 'MOBILE_MONEY'
+                  ? <>Date de paiement : <strong>aujourd'hui</strong> (validation immédiate)</>
+                  : <>Date de paiement : <strong>J+5 jours</strong> (virement bancaire)</>
+                }
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Récapitulatif */}
         <div className="order-summary">
@@ -615,9 +672,28 @@ export default function AddCommandeForm() {
             <span>Mode de paiement:</span>
             <span className="payment-summary">
               {typePaiement === 'CASH' && 'Espèces'}
-              {typePaiement === 'BANK' && 'Carte bancaire'}
+              {typePaiement === 'BANK' && 'Virement bancaire'}
               {typePaiement === 'MOBILE_MONEY' && 'Mobile Money'}
               {typePaiement === 'CREDIT' && 'Crédit'}
+            </span>
+          </div>
+          <div className="summary-row">
+            <span>Date de paiement:</span>
+            <span>
+              {typePaiement === 'CREDIT'
+                ? datePaiement || '—'
+                : getAutoDate(typePaiement)}
+            </span>
+          </div>
+          <div className="summary-row">
+            <span>Validation:</span>
+            <span style={{
+              color: (typePaiement === 'CASH' || typePaiement === 'MOBILE_MONEY') ? '#1D9E75' : '#BA7517',
+              fontWeight: 500
+            }}>
+              {(typePaiement === 'CASH' || typePaiement === 'MOBILE_MONEY')
+                ? '✓ Automatique'
+                : '⏳ Manuelle requise'}
             </span>
           </div>
           <div className="summary-row total">

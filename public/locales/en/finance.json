@@ -1,0 +1,70 @@
+{
+  "title": "Finances",
+  "loading": "Loading financial data…",
+  "unauthorized": {
+    "title": "Restricted Access",
+    "message": "Only administrators can access the finances section."
+  },
+  "export_pdf": "Export to PDF",
+  "sections": {
+    "resultat": "Income Statement",
+    "bilan": "Balance Sheet",
+    "transactions": "Transactions",
+    "wallet": "Wallet"
+  },
+  "overview": {
+    "balance": "Account Balance",
+    "revenue": "Revenue",
+    "net_result": "Net Result"
+  },
+  "resultat": {
+    "title": "Income Statement",
+    "revenue": "Revenue",
+    "gross_margin": "Gross Margin",
+    "added_value": "Added Value",
+    "ebe": "EBITDA",
+    "operating_result": "Operating Result",
+    "net_result": "Net Result"
+  },
+  "bilan": {
+    "actif": "Assets",
+    "passif": "Liabilities & Equity",
+    "receivables": "Accounts Receivable",
+    "stocks": "Inventory",
+    "total_actif": "Total Assets",
+    "supplier_debts": "Accounts Payable",
+    "equity": "Equity",
+    "total_passif": "Total Liabilities & Equity"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "total": "total",
+    "purchase": "Purchase",
+    "sale": "Sale",
+    "page": "Page",
+    "no_data": "No transactions available"
+  },
+  "wallet": {
+    "current_balance": "Current Balance",
+    "balance": "Balance",
+    "deposits": "Total Deposits",
+    "withdrawals": "Total Withdrawals",
+    "available_balance": "Available Balance",
+    "deposit": "Deposit",
+    "withdrawal": "Withdrawal",
+    "do_deposit": "Make Deposit",
+    "do_withdrawal": "Make Withdrawal",
+    "amount": "Amount (Ar)",
+    "amount_placeholder": "Enter amount",
+    "reason": "Reason",
+    "reason_placeholder": "Enter reason",
+    "available": "Available balance",
+    "processing": "Processing...",
+    "deposit_success": "Deposit of {{amount}} completed successfully",
+    "withdraw_success": "Withdrawal of {{amount}} completed successfully",
+    "insufficient_balance": "Insufficient balance for this withdrawal",
+    "balance_evolution": "Balance Evolution",
+    "funds_distribution": "Funds Distribution",
+    "recent_transactions": "Recent Transactions"
+  }
+}

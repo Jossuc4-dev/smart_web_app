@@ -12,5 +12,9 @@
   "aide": "Help & Support",
   "deconnexion": "Logout",
 
-  "navigation": "Navigation"
+  "navigation": "Navigation",
+  "role":{
+    "admin": "Administrator",
+    "user": "Employee"
+  }
 }

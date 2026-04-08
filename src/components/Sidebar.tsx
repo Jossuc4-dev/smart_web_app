@@ -186,9 +186,6 @@ export default function Sidebar({
             </div>
             <span className="sidebar__logo-text">My Business</span>
           </div>
-
-          {/* ← Sélecteur de langue ajouté ici */}
-          <LanguageSwitcher />
         </div>
 
         {/* ── Navigation ───────────────────────────────────────────────────── */}

@@ -1,0 +1,801 @@
+/* App.css — Smart Business · Animated Background Edition */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --blue: #2E86AB;
+  --cyan: #17A8B8;
+  --teal: #1B8A5A;
+  --bg: #f0f5fb;
+  --text-1: #1a2940;
+  --text-2: #3d5a73;
+  --text-3: #7a95aa;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg);
+  color: var(--text-1);
+  overflow-x: hidden;
+}
+
+/* Animations du hero */
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-title {
+  animation: fadeSlideUp 1.2s ease-out forwards;
+}
+
+.hero-subtitle {
+  animation: fadeSlideUp 1.5s ease-out forwards;
+  animation-delay: 0.3s;
+}
+
+.cta-button {
+  animation: fadeSlideUp 1.8s ease-out forwards;
+  animation-delay: 0.6s;
+}
+
+/* ════════════════════════════════════════════════
+   BACKGROUND ANIMATIONS LAYER
+   ════════════════════════════════════════════════ */
+
+/* 1. Grille de points */
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(46, 134, 171, 0.10) 1px, transparent 1px);
+  background-size: 32px 32px;
+  animation: gridDrift 20s ease-in-out infinite alternate;
+}
+
+@keyframes gridDrift {
+  0% {
+    background-position: 0 0;
+    opacity: 0.7;
+  }
+
+  100% {
+    background-position: 16px 16px;
+    opacity: 1;
+  }
+}
+
+/* 2. Orbes flottants */
+.bg-orbs {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: 0;
+  animation: orbFloat var(--dur, 18s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+.orb-1 {
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(46, 134, 171, 0.18) 0%, transparent 70%);
+  top: -10%;
+  left: -8%;
+  --dur: 22s;
+  --delay: 0s;
+}
+
+.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(23, 168, 184, 0.14) 0%, transparent 70%);
+  top: 20%;
+  right: -6%;
+  --dur: 18s;
+  --delay: -6s;
+}
+
+.orb-3 {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(27, 138, 90, 0.10) 0%, transparent 70%);
+  bottom: 5%;
+  left: 20%;
+  --dur: 26s;
+  --delay: -12s;
+}
+
+.orb-4 {
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(46, 134, 171, 0.12) 0%, transparent 70%);
+  top: 55%;
+  right: 25%;
+  --dur: 20s;
+  --delay: -4s;
+}
+
+.orb-5 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(23, 168, 184, 0.16) 0%, transparent 70%);
+  top: 5%;
+  left: 45%;
+  --dur: 15s;
+  --delay: -9s;
+}
+
+@keyframes orbFloat {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(1);
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(40px, -30px) scale(1.08);
+  }
+
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.8;
+    transform: translate(-20px, 20px) scale(0.96);
+  }
+}
+
+/* 3. Lignes de circuit */
+.bg-circuits {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.circuit-line {
+  position: absolute;
+  background: linear-gradient(90deg, transparent, var(--color, rgba(46, 134, 171, 0.22)), transparent);
+  animation: lineSweep var(--dur, 8s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  opacity: 0;
+  border-radius: 2px;
+}
+
+.cl-h1 {
+  width: 35%;
+  height: 1px;
+  top: 18%;
+  left: -40%;
+  --dur: 9s;
+  --delay: 0s;
+}
+
+.cl-h2 {
+  width: 25%;
+  height: 1px;
+  top: 42%;
+  left: -30%;
+  --dur: 12s;
+  --delay: -3s;
+  --color: rgba(23, 168, 184, 0.18);
+}
+
+.cl-h3 {
+  width: 40%;
+  height: 1px;
+  top: 67%;
+  left: -45%;
+  --dur: 10s;
+  --delay: -6s;
+}
+
+.cl-h4 {
+  width: 20%;
+  height: 1px;
+  top: 82%;
+  right: -25%;
+  --dur: 8s;
+  --delay: -1s;
+  --color: rgba(27, 138, 90, 0.14);
+  animation-name: lineSweepRight;
+}
+
+.cl-v1 {
+  width: 1px;
+  height: 30%;
+  left: 22%;
+  top: -35%;
+  --dur: 11s;
+  --delay: -2s;
+  animation-name: lineSweepDown;
+}
+
+.cl-v2 {
+  width: 1px;
+  height: 22%;
+  left: 58%;
+  top: -28%;
+  --dur: 14s;
+  --delay: -7s;
+  --color: rgba(23, 168, 184, 0.16);
+  animation-name: lineSweepDown;
+}
+
+.cl-v3 {
+  width: 1px;
+  height: 35%;
+  right: 18%;
+  top: -40%;
+  --dur: 9s;
+  --delay: -4s;
+  animation-name: lineSweepDown;
+}
+
+@keyframes lineSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(0)
+  }
+
+  10% {
+    opacity: 1
+  }
+
+  80% {
+    opacity: .6
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(140vw)
+  }
+}
+
+@keyframes lineSweepRight {
+  0% {
+    opacity: 0;
+    transform: translateX(0)
+  }
+
+  10% {
+    opacity: 1
+  }
+
+  80% {
+    opacity: .6
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-140vw)
+  }
+}
+
+@keyframes lineSweepDown {
+  0% {
+    opacity: 0;
+    transform: translateY(0)
+  }
+
+  10% {
+    opacity: 1
+  }
+
+  80% {
+    opacity: .6
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(140vh)
+  }
+}
+
+/* 4. Particules scintillantes */
+.bg-particles {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  width: var(--size, 4px);
+  height: var(--size, 4px);
+  border-radius: 50%;
+  background: var(--color, rgba(46, 134, 171, 0.5));
+  box-shadow: 0 0 6px var(--color, rgba(46, 134, 171, 0.4));
+  animation: particleTwinkle var(--dur, 4s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+.p1 {
+  top: 8%;
+  left: 12%;
+  --size: 3px;
+  --dur: 4s;
+  --delay: 0s;
+}
+
+.p2 {
+  top: 15%;
+  left: 72%;
+  --size: 5px;
+  --dur: 6s;
+  --delay: -1s;
+  --color: rgba(23, 168, 184, 0.5);
+}
+
+.p3 {
+  top: 28%;
+  left: 35%;
+  --size: 3px;
+  --dur: 5s;
+  --delay: -2s;
+}
+
+.p4 {
+  top: 35%;
+  left: 85%;
+  --size: 4px;
+  --dur: 7s;
+  --delay: -0.5s;
+  --color: rgba(27, 138, 90, 0.4);
+}
+
+.p5 {
+  top: 50%;
+  left: 8%;
+  --size: 6px;
+  --dur: 5s;
+  --delay: -3s;
+  --color: rgba(23, 168, 184, 0.35);
+}
+
+.p6 {
+  top: 58%;
+  left: 55%;
+  --size: 3px;
+  --dur: 4s;
+  --delay: -1.5s;
+}
+
+.p7 {
+  top: 70%;
+  left: 25%;
+  --size: 5px;
+  --dur: 8s;
+  --delay: -4s;
+  --color: rgba(46, 134, 171, 0.4);
+}
+
+.p8 {
+  top: 75%;
+  left: 78%;
+  --size: 3px;
+  --dur: 5s;
+  --delay: -2.5s;
+  --color: rgba(23, 168, 184, 0.5);
+}
+
+.p9 {
+  top: 88%;
+  left: 42%;
+  --size: 4px;
+  --dur: 6s;
+  --delay: -1s;
+}
+
+.p10 {
+  top: 92%;
+  left: 90%;
+  --size: 3px;
+  --dur: 4s;
+  --delay: -3.5s;
+  --color: rgba(27, 138, 90, 0.45);
+}
+
+.p11 {
+  top: 5%;
+  left: 92%;
+  --size: 5px;
+  --dur: 7s;
+  --delay: -0.8s;
+}
+
+.p12 {
+  top: 45%;
+  left: 48%;
+  --size: 3px;
+  --dur: 5s;
+  --delay: -2s;
+  --color: rgba(23, 168, 184, 0.4);
+}
+
+@keyframes particleTwinkle {
+
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+/* 5. Anneaux pulsants */
+.bg-pulse-ring {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  pointer-events: none;
+  width: 600px;
+  height: 600px;
+}
+
+.pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(46, 134, 171, 0.08);
+  animation: pulseExpand 6s ease-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+.pulse-ring:nth-child(2) {
+  --delay: -2s;
+  border-color: rgba(23, 168, 184, 0.06);
+}
+
+.pulse-ring:nth-child(3) {
+  --delay: -4s;
+  border-color: rgba(27, 138, 90, 0.05);
+}
+
+@keyframes pulseExpand {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   CONTENU (z-index > background)
+   ════════════════════════════════════════════════ */
+
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* Barre de navigation */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 5%;
+  background-color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(46, 134, 171, 0.10);
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo-text {
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2E86AB, #17A8B8);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  align-items: center;
+  font-weight: 500;
+  color: #2c3e3f;
+}
+
+.nav-links li {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.nav-links li:hover {
+  color: #2E86AB;
+  /* Bleu primaire au hover */
+}
+
+.login-link {
+  text-decoration: none;
+  color: #2c3e3f;
+}
+
+.se-connecter {
+  border-left: 1px solid #ddd;
+  padding-left: 1.5rem;
+}
+
+.creer-compte {
+  background-color: #2E86AB;
+  /* Bleu primaire */
+  color: white !important;
+  padding: 0.5rem 1.2rem;
+  border-radius: 2rem;
+  transition: background 0.2s;
+}
+
+.creer-compte:hover {
+  background-color: #236b8a;
+  /* Version plus foncée du bleu */
+  color: white !important;
+}
+
+/* Hero section */
+.hero {
+  flex: 1;
+  display: flex;
+  gap: 1vw;
+  justify-content: space-around;
+  align-items: center;
+  text-align: center;
+  padding: 5rem 2rem;
+  background: transparent;
+}
+
+.hero_text {
+  width: 58%;
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  color: #1a2a2f;
+}
+
+.hero-subtitle {
+  font-size: 1.10rem;
+  color: #4a5c5e;
+  margin-bottom: 2rem;
+}
+
+.hero-subtitle strong {
+  color: #2E86AB;
+  /* Bleu primaire */
+  font-weight: 600;
+}
+
+.cta-button {
+  background-color: #026e47;
+  /* Bleu primaire */
+  border: none;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.9rem 2.2rem;
+  border-radius: 3rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 3rem;
+  box-shadow: 0 4px 12px rgba(46, 134, 171, 0.2);
+  width: 25vw;
+  margin-left: 18vw;
+  margin-top: -10vh;
+}
+
+.cta-button:hover {
+  background-color: #035c3b;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 16px rgba(46, 134, 171, 0.3);
+}
+
+.cta-button.secondary {
+  background-color: transparent;
+  color: #2E86AB;
+  /* Bleu primaire */
+  border: 2px solid #2E86AB;
+  box-shadow: none;
+  margin-bottom: 0;
+}
+
+.cta-button.secondary:hover {
+  background-color: #2E86AB;
+  color: white;
+}
+
+.reviews {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.review {
+  background: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stars {
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  color: #f5b342;
+}
+
+.rating {
+  font-weight: 600;
+  color: #1a2a2f;
+}
+
+/* Footer */
+.footer {
+  background-color: rgba(232, 240, 247, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(46, 134, 171, 0.10);
+  padding: 3rem 5% 1.5rem;
+  margin-top: auto;
+}
+
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.logo-text,
+.footer-logo .logo-text.small {
+  background: linear-gradient(135deg, #2E86AB, #17A8B8, #1B8A5A);
+  background-size: 300% 300%;
+  animation: gradientMove 6s ease infinite;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.slogan {
+  font-size: 1.2rem;
+  color: #2c3e3f;
+  max-width: 500px;
+  font-weight: 500;
+}
+
+.copyright {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #6b7c7e;
+  border-top: 1px solid #dfe7e4;
+  padding-top: 1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .se-connecter {
+    border-left: none;
+    padding-left: 0;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero_image img {
+    animation: floatImage 6s ease-in-out infinite;
+  }
+
+  @keyframes floatImage {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .reviews {
+    gap: 1rem;
+  }
+
+  .review {
+    padding: 0.5rem 1rem;
+  }
+}

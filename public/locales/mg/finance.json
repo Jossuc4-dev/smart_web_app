@@ -1,0 +1,70 @@
+{
+  "title": "Finansy",
+  "loading": "Mametraka ny données finansy…",
+  "unauthorized": {
+    "title": "Fidirana voafetra",
+    "message": "Ny administrateur ihany no afaka miditra amin'ny faritra finansy."
+  },
+  "export_pdf": "Exporter en PDF",
+  "sections": {
+    "resultat": "Kaonty vokatra",
+    "bilan": "Bilan comptable",
+    "transactions": "Transactions",
+    "wallet": "Portefeuille"
+  },
+  "overview": {
+    "balance": "Solde kaonty",
+    "revenue": "Volan'ny orinasa",
+    "net_result": "Vokatra farany"
+  },
+  "resultat": {
+    "title": "Kaonty vokatra",
+    "revenue": "Volan'ny orinasa",
+    "gross_margin": "Marge brute",
+    "added_value": "Valeur ajoutée",
+    "ebe": "EBE",
+    "operating_result": "Vokatra fiasana",
+    "net_result": "Vokatra farany"
+  },
+  "bilan": {
+    "actif": "Actif",
+    "passif": "Passif",
+    "receivables": "Créances clients",
+    "stocks": "Stocks",
+    "total_actif": "Total Actif",
+    "supplier_debts": "Dettes fournisseurs",
+    "equity": "Capitaux propres",
+    "total_passif": "Total Passif"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "total": "Totaly",
+    "purchase": "Fividianana",
+    "sale": "Varotra",
+    "page": "Pejy",
+    "no_data": "Tsy misy fifezivezem-bola"
+  },
+  "wallet": {
+    "current_balance": "Maribola ankehitriny",
+    "balance": "Maribola",
+    "deposits": "Fitambaran'ny fametraham-bola",
+    "withdrawals": "Fitambaran'ny fisintomam-bola",
+    "available_balance": "Maribola azo ampiasaina",
+    "deposit": "Fametraham-bola",
+    "withdrawal": "Fisintomam-bola",
+    "do_deposit": "Mametra-bola",
+    "do_withdrawal": "Misitom-bola",
+    "amount": "Vola (Ar)",
+    "amount_placeholder": "Ampidiro ny vola",
+    "reason": "Antony",
+    "reason_placeholder": "Ampidiro ny antony",
+    "available": "Maribola azo ampiasaina",
+    "processing": "Mamindra...",
+    "deposit_success": "Petrabola {{amount}} vita soa aman-tsara",
+    "withdraw_success": "Fisitomam-bola  {{amount}} vita soa aman-tsara",
+    "insufficient_balance": "Tsy ampy ny maribola hanatanterahana io fisitonam-bola io",
+    "balance_evolution": "Fivoaran'ny maribola",
+    "funds_distribution": "Fizarana ny vola",
+    "recent_transactions": "Fivezivezem-bola farany"
+  }
+}
