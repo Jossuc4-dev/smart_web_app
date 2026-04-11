@@ -1,0 +1,27 @@
+{
+  "title": "Sales",
+  "stats": {
+    "total": "TOTAL",
+    "paid": "PAID",
+    "pending": "PENDING",
+    "on_credit": "ON CREDIT"
+  },
+  "values": {
+    "paid": "0 Ar",
+    "pending": "0 Ar",
+    "on_credit": "0 Ar"
+  },
+  "revenue": {
+    "currency_euro": "€",
+    "currency_ariary": "0 Ar",
+    "label": "TOTAL REVENUE"
+  },
+  "best_customer": "BEST CUSTOMER",
+  "search_placeholder": "Search customer, reference or product...",
+  "filters": {
+    "all": "All (0)",
+    "paid": "Paid (0)",
+    "pending": "Pending (0)",
+    "on_credit": "On credit (0)"
+  }
+}

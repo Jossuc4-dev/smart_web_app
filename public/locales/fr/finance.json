@@ -17,7 +17,7 @@
     "revenue": "Chiffre d'affaires",
     "net_result": "Résultat net"
   },
-  "resultat": {
+  "resultat": { 
     "title": "Compte de résultat",
     "revenue": "Chiffre d'affaires",
     "gross_margin": "Marge brute",
