@@ -24,9 +24,9 @@ dist-ssr
 *.sw?
 .ignore
 
-.dockerignore
-compose.yaml
-Dockerfile
+# .dockerignore
+# compose.yaml
+# Dockerfile
 test.txt
 
 *.yaml
