@@ -522,7 +522,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 5%;
+  padding: 1rem 5%;
   background-color: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -530,6 +530,19 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
+  min-height: 60px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.logo-img {
+  height: 45px;
+  width: auto;
+  object-fit: contain;
 }
 
 .burger-menu {
@@ -541,6 +554,7 @@ body {
   cursor: pointer;
   z-index: 101;
   transition: transform 0.3s ease;
+  padding: 0.5rem;
 }
 
 .burger-menu:hover {
@@ -565,11 +579,13 @@ body {
   font-weight: 500;
   color: #2c3e3f;
   transition: transform 0.3s ease;
+  margin: 0;
 }
 
 .nav-links li {
   cursor: pointer;
   transition: color 0.2s ease;
+  white-space: nowrap;
 }
 
 .nav-links li:hover {
@@ -811,7 +827,12 @@ body {
 
 @media (max-width: 768px) {
   .navbar {
-    padding: 1rem 5%;
+    padding: 0.8rem 4%;
+    min-height: 56px;
+  }
+
+  .logo-img {
+    height: 38px;
   }
 
   .burger-menu {
@@ -871,10 +892,6 @@ body {
     padding: 0.8rem 1.2rem;
   }
 
-  .logo-img {
-    height: 40px;
-  }
-
   .hero {
     flex-direction: column;
     padding: 2rem 1rem;
@@ -913,11 +930,17 @@ body {
 
 @media (max-width: 480px) {
   .navbar {
-    padding: 0.8rem;
+    padding: 0.7rem 3%;
+    min-height: 52px;
   }
 
   .logo-img {
     height: 35px;
+  }
+
+  .burger-menu {
+    font-size: 1.6rem;
+    padding: 0.3rem;
   }
 
   .nav-links {
