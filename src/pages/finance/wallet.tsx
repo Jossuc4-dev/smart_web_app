@@ -122,9 +122,10 @@ const Wallet: React.FC = () => {
     }
 
     try {
-      await dispatch(withdraw({ montant: value, type: 'retrait' }) as any).unwrap();
+      await dispatch(withdraw({ montant: value, type: 'retrait', motif: motif || 'Retrait' }) as any).unwrap();
       setSuccessMessage(`Retrait de ${formatCurrency(value)} effectué avec succès`);
       setMontant('');
+      setMotif('');
       setTimeout(() => setSuccessMessage(''), 4000);
     } catch (err: any) {
       console.error('Erreur retrait:', err);
