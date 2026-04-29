@@ -1,9 +1,16 @@
 import './landing.css';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/logo-smart.png'
+import { useState } from 'react';
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 function LandingPage() {
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const toggleMenu = () => setMenuOpen(!menuOpen);
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <div className="app">
       {/* ── Couches d'animation background ── */}
@@ -44,18 +51,31 @@ function LandingPage() {
       {/* Barre de navigation */}
       <nav className="navbar">
         <div className="logo">
-          {/* Remplacez par votre image */}
           <img src={logo} alt="SmartBusiness" height={50} className="logo-img" />
         </div>
-        <ul className="nav-links">
-          <li>Produits</li>
-          <li>Activité</li>
-          <li>Tarif</li>
-          <li>Ressources</li>
-          <li className="se-connecter"><a className='login-link' onClick={()=>navigate('/login')}>Se connecter</a></li>
-          <li className="creer-compte" onClick={() => navigate('/register')}>Créer un compte</li>
+        
+        {/* Burger menu icon */}
+        <button className="burger-menu" onClick={toggleMenu} aria-label="Menu">
+          {menuOpen ? <FaTimes /> : <FaBars />}
+        </button>
+
+        {/* Navigation links */}
+        <ul className={`nav-links ${menuOpen ? 'active' : ''}`}>
+          <li onClick={closeMenu}>Produits</li>
+          <li onClick={closeMenu}>Activité</li>
+          <li onClick={closeMenu}>Tarif</li>
+          <li onClick={closeMenu}>Ressources</li>
+          <li className="se-connecter" onClick={() => { navigate('/login'); closeMenu(); }}>
+            <a className='login-link'>Se connecter</a>
+          </li>
+          <li className="creer-compte" onClick={() => { navigate('/register'); closeMenu(); }}>
+            Créer un compte
+          </li>
         </ul>
       </nav>
+
+      {/* Overlay pour fermer le menu */}
+      {menuOpen && <div className="menu-overlay" onClick={closeMenu} />}
 
       {/* Section principale */}
       <main className="hero">
